@@ -1052,7 +1052,6 @@ class GameManager {
         }
 
         if (testId === 'mentalMath' || testId === 'storyMath') {
-            this.appContainer.style.backgroundColor = '#1a1a1a';
             this.gameData.mathType = testId === 'mentalMath' ? 'mental' : 'story';
             this.gameData.mathRounds = testId === 'mentalMath' ? 12 : 5;
             this.gameData.mathCurrentRound = 0;
@@ -1075,7 +1074,6 @@ class GameManager {
         }
 
         if (testId === 'visualSpatialMemory') {
-            this.appContainer.style.backgroundColor = '#1a1a1a';
             this.showScreen('grid-memory-screen');
             this.gameData.currentTrialCount = 0;
             this.gameData.trialScores = [];
@@ -1084,7 +1082,6 @@ class GameManager {
         }
 
         if (testId === 'simultaneousSpatialMemory') {
-            this.appContainer.style.backgroundColor = '#1a1a1a';
             this.showScreen('grid-memory-screen');
             this.gameData.currentTrialCount = 0;
             this.gameData.trialScores = [];
@@ -1093,7 +1090,6 @@ class GameManager {
         }
 
         if (testId === 'chimpTest') {
-            this.appContainer.style.backgroundColor = '#1a1a1a';
             this.showScreen('grid-memory-screen');
             this.gameData.currentTrialCount = 0;
             this.gameData.trialScores = [];
@@ -1102,7 +1098,6 @@ class GameManager {
         }
 
         if (testId === 'flankerArrow') {
-            this.appContainer.style.backgroundColor = '#1a1a1a';
             this.showScreen('flanker-screen');
             if (!this.gameData.isIndividualTest) this.updateProgressBar();
             this.gameData.flankerCurrentTrial = 0;
@@ -1113,7 +1108,6 @@ class GameManager {
         }
 
         if (testId === 'sequentialNumberMemory') {
-            this.appContainer.style.backgroundColor = '#1a1a1a';
             this.showScreen('number-memory-screen');
             if (!this.gameData.isIndividualTest) this.updateProgressBar();
             this.gameData.currentTrialCount = 0;
@@ -1125,7 +1119,6 @@ class GameManager {
         }
 
         if (testId === 'reverseSequentialNumberMemory') {
-            this.appContainer.style.backgroundColor = '#1a1a1a';
             this.showScreen('number-memory-screen');
             if (!this.gameData.isIndividualTest) this.updateProgressBar();
             this.gameData.currentTrialCount = 0;
@@ -1137,7 +1130,6 @@ class GameManager {
         }
 
         if (testId === 'nBackTask') {
-            this.appContainer.style.backgroundColor = '#1a1a1a';
             this.showScreen('nback-screen');
             if (!this.gameData.isIndividualTest) this.updateProgressBar();
             this.startNBackTask();
@@ -1172,8 +1164,8 @@ class GameManager {
         const currentTrialDisplay = this.gameData.currentTrialCount + 1;
 
         if (testId === 'audioReaction') {
-            this.appContainer.style.backgroundColor = '#1a1a1a';
-            document.body.style.backgroundColor = '#1a1a1a';
+            this.appContainer.style.backgroundColor = '';
+            document.body.style.backgroundColor = '';
             prompt.innerHTML = `Wait for the sound...<br><span style="font-size: 1rem; opacity: 0.5;">Trial ${currentTrialDisplay}/5</span>`;
             prompt.style.color = "rgba(255,255,255,0.7)";
 
@@ -2141,8 +2133,8 @@ class GameManager {
             clearInterval(this.gameData.distractorIntervalId);
             this.gameData.isWaiting = false;
 
-            this.appContainer.style.backgroundColor = '#1a1a1a';
-            document.body.style.backgroundColor = '#1a1a1a';
+            this.appContainer.style.backgroundColor = '';
+            document.body.style.backgroundColor = '';
             const prompt = document.getElementById('minigame-prompt');
             prompt.textContent = "Too early!";
             prompt.style.color = "#cc3333";
@@ -2163,8 +2155,8 @@ class GameManager {
             this.gameData.trialTimes.push(reactionTime);
             this.gameData.currentTrialCount++;
 
-            this.appContainer.style.backgroundColor = '#1a1a1a';
-            document.body.style.backgroundColor = '#1a1a1a';
+            this.appContainer.style.backgroundColor = '';
+            document.body.style.backgroundColor = '';
             const prompt = document.getElementById('minigame-prompt');
             prompt.textContent = `${reactionTime} ms`;
             prompt.style.color = "var(--accent-color)";
