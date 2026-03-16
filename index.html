@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cognitive Intelligence Test</title>
+    <script>
+        document.write('<link rel="stylesheet" href="style.css?v=' + Date.now() + '">');
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="progress-container" style="display: none;">
+        <div id="progress-bar"></div>
+    </div>
+
+    <div id="app">
+        <div id="menu-screen" class="screen">
+            <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
+            <h1>Cognitive Intelligence Test</h1>
+            <p>Test your reaction times, memory, and cognitive focus.</p>
+            <div
+                style="display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem; align-items: center; justify-content: center; width: 100%;">
+                <button id="start-full-btn" class="primary" style="width: 100%; max-width: 300px;">Start Full
+                    Assessment</button>
+                <select id="duration-select"
+                    style="width: 100%; max-width: 300px; padding: 0.8rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--surface-color); color: var(--text-color); font-size: 1rem; cursor: pointer;">
+                    <option value="1">Short (1 Round)</option>
+                    <option value="2">Medium (2 Rounds)</option>
+                    <option value="3">Long (3 Rounds)</option>
+                </select>
+                <button id="show-individual-btn" class="secondary" style="width: 100%; max-width: 300px;">Practice
+                    Individual Tests</button>
+                <button id="view-history-btn" class="secondary"
+                    style="width: 100%; max-width: 300px; border: 1px solid var(--accent-color);">View Past
+                    Results</button>
+            </div>
+        </div>
+
+        <div id="practice-screen" class="screen">
+            <h2>Practice Individual Tests</h2>
+            <p style="margin-bottom: 2rem;">Select a test to practice your skills.</p>
+            <div class="test-grid" style="width: 100%; max-width: 600px; margin: 0 auto;">
+                <button class="test-btn" data-test="audioReaction">Audio Reaction</button>
+                <button class="test-btn" data-test="visualReaction">Visual Reaction</button>
+                <button class="test-btn" data-test="inhibitoryControl">Inhibitory Control</button>
+                <button class="test-btn" data-test="flankerArrow">Flanker Arrow</button>
+                <button class="test-btn" data-test="visualSpatialMemory">Sequential Spatial Memory</button>
+                <button class="test-btn" data-test="simultaneousSpatialMemory">Simultaneous Spatial</button>
+                <button class="test-btn" data-test="sequentialNumberMemory">Sequential Numbers</button>
+                <button class="test-btn" data-test="reverseSequentialNumberMemory">Reverse Numbers</button>
+                <button class="test-btn" data-test="nBackTask">N-Back Task</button>
+                <button class="test-btn" data-test="chimpTest">Chimp Test</button>
+                <button class="test-btn" data-test="mentalMath">Mental Math</button>
+                <button class="test-btn" data-test="storyMath">Story Math</button>
+            </div>
+            <button onclick="window.gameManager.showScreen('menu-screen')" style="margin-top: 2rem;">Back to
+                Menu</button>
+        </div>
+
+        <div id="instructions-screen" class="screen">
+            <h1 id="inst-title"></h1>
+            <p id="inst-desc"></p>
+            <button id="begin-test-btn">Begin Test</button>
+        </div>
+
+        <div id="minigame-screen" class="screen">
+            <h2 id="minigame-prompt"></h2>
+        </div>
+
+        <div id="flanker-screen" class="screen">
+            <div class="flanker-container">
+                <div id="flanker-feedback" class="flanker-feedback"></div>
+                <div id="flanker-arrows" class="flanker-arrows"></div>
+            </div>
+        </div>
+
+        <div id="story-reading-screen" class="screen">
+            <div class="story-container">
+                <p id="story-text"></p>
+                <div class="timer" id="story-timer">30</div>
+            </div>
+        </div>
+
+        <div id="story-question-screen" class="screen">
+            <div class="question-container" id="dynamic-questions-container">
+                <!-- Javascript will inject question h2s and radio buttons here -->
+            </div>
+            <button id="submit-story-btn" style="margin-top: 2rem;">Submit Answers</button>
+        </div>
+        <!-- Address Memory: Reading Screen -->
+        <div id="address-reading-screen" class="screen">
+            <h2>Memorize the Address</h2>
+            <div class="timer-display" id="address-timer">15s</div>
+            <div id="address-text-container"
+                style="font-size: 1.5rem; line-height: 1.8; max-width: 800px; text-align: center; margin: 2rem 0; padding: 2rem; background: var(--surface-color); border-radius: 8px; border: 1px solid var(--border-color);">
+                <!-- Javascript will inject address here -->
+            </div>
+        </div>
+
+        <!-- Address Memory: Questions Screen -->
+        <div id="address-questions-screen" class="screen">
+            <h2>Address Memory Test</h2>
+            <div id="address-questions-container"
+                style="display: flex; flex-direction: column; gap: 2rem; max-width: 800px; width: 100%; text-align: center;">
+                <div class="question-block"
+                    style="background: var(--surface-color); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <h3>Which of the following was the correct address?</h3>
+                    <div class="options-container" id="address-options-container"
+                        style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1rem;">
+                        <!-- Javascript will inject radio buttons here -->
+                    </div>
+                </div>
+            </div>
+            <button id="submit-address-btn" class="primary" style="margin-top: 2rem;">Submit Answer</button>
+        </div>
+        <div id="grid-memory-screen" class="screen">
+            <h2>Remember the pattern</h2>
+            <div id="memory-grid" class="memory-grid">
+                <!-- 16 cells injected via JS -->
+            </div>
+            <button id="submit-grid-btn" style="visibility: hidden; display: block; margin: 2rem auto 0;">Confirm
+                Pattern</button>
+        </div>
+
+        <div id="number-memory-screen" class="screen">
+            <h2 id="number-prompt">Remember the sequence...</h2>
+            <div id="number-display" class="number-display"></div>
+            <div id="number-input-container" style="display: none; flex-direction: column; align-items: center;">
+                <input type="number" id="number-input" placeholder="Type sequence here" autocomplete="off" />
+                <button id="submit-number-btn" style="margin-top: 1rem;">Submit</button>
+            </div>
+        </div>
+
+        <div id="math-test-screen" class="screen">
+            <h2 id="math-question" style="font-size: 2rem; margin-bottom: 2rem; max-width: 800px; line-height: 1.5;">
+            </h2>
+            <div class="timer" id="math-timer" style="margin-bottom: 2rem;"></div>
+            <div id="math-input-container" style="display: flex; flex-direction: column; align-items: center;">
+                <input type="number" id="math-input" placeholder="Your answer" autocomplete="off"
+                    style="font-size: 1.5rem; padding: 0.5rem; width: 200px; text-align: center;" />
+                <button id="submit-math-btn" style="margin-top: 1rem;">Submit</button>
+            </div>
+            <div id="math-progress" style="margin-top: 2rem; color: var(--text-color); opacity: 0.7;"></div>
+        </div>
+
+        <div id="nback-screen" class="screen">
+            <h2>Press Spacebar if letter matches the one from 2 steps ago.</h2>
+            <div id="nback-letter-display" class="nback-letter"></div>
+            <div id="nback-feedback" class="nback-feedback"></div>
+        </div>
+
+        <div id="results-screen" class="screen">
+            <h1>Round Score</h1>
+            <div class="score-display" id="round-score">0 ms</div>
+            <button id="next-test-btn">Next</button>
+        </div>
+
+        <div id="final-screen" class="screen">
+            <h1>Test Complete</h1>
+            <div id="final-summary"></div>
+            <button id="restart-btn" style="margin-top: 2rem;">Menu</button>
+        </div>
+
+        <div id="history-screen" class="screen">
+            <h2>Past Assessment Results</h2>
+            <div id="history-container" class="history-list">
+                <!-- Javascript will inject history rows here -->
+            </div>
+            <button id="close-history-btn" style="margin-top: 2rem;">Back to Menu</button>
+        </div>
+
+        <div id="history-detail-screen" class="screen">
+            <h2>Detailed Assessment Breakdown</h2>
+            <div id="history-detail-container"
+                style="width: 100%; max-width: 800px; margin: 0 auto; text-align: center; overflow-x: auto;">
+                <!-- Javascript will inject table here -->
+            </div>
+            <button onclick="window.gameManager.showScreen('history-screen')" style="margin-top: 2rem;">Back to History
+                List</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h2>Settings</h2>
+            <div class="setting-item">
+                <span>Sound Feedback</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-sound" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <span>Dark Mode</span>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-theme" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <button id="close-settings-btn" style="margin-top: 2rem; width: 100%;">Close</button>
+        </div>
+    </div>
+    <script>document.write('<scr' + 'ipt src="app.js?v=' + Date.now() + '"></scr' + 'ipt>');</script>
+</body>
+
+</html>
