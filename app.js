@@ -1058,7 +1058,7 @@ class GameManager {
                 ${indexed.map((item, i) => `<label><input type="radio" name="addressOption" value="${i}"> ${item.opt}</label>`).join('')}
             `;
 
-            let timeLeft = 15;
+            let timeLeft = 30;
             const existingTimer = document.getElementById('address-questions-timer');
             if (existingTimer) existingTimer.remove();
 
@@ -1684,6 +1684,7 @@ class GameManager {
     }
 
     handleChimpGridClick(index, cell) {
+        if (this.gameData.isWaiting) return;
         const expectedNumber = this.gameData.chimpNextExpected;
         const clickedNumber = this.gameData.chimpNumberMap[index];
 
@@ -1722,17 +1723,24 @@ class GameManager {
         } else {
             // Wrong click — count mistake and flash red
             this.gameData.chimpMistakes++;
+
+            const originalBg = cell.style.backgroundColor;
+            const originalBorder = cell.style.borderColor;
+
             cell.style.backgroundColor = 'rgba(255, 77, 77, 0.6)';
             cell.style.borderColor = '#ff4d4d';
             this.playBeep(200, 0.15);
 
-            // Wait a bit before ending to show the mistake
-            this.gameData.isWaiting = true;
-            setTimeout(() => {
-                this.endChimpTrial();
-            }, 600);
             // Update prompt to show mistakes
             document.querySelector('#grid-memory-screen h2').textContent = `Chimp Test — Trial ${this.gameData.currentTrialCount + 1} of 5 (${this.gameData.chimpMistakes} mistake${this.gameData.chimpMistakes !== 1 ? 's' : ''})`;
+
+            // Briefly show red, then reset to allow retry
+            this.gameData.isWaiting = true;
+            setTimeout(() => {
+                cell.style.backgroundColor = originalBg;
+                cell.style.borderColor = originalBorder;
+                this.gameData.isWaiting = false;
+            }, 400);
         }
     }
 
@@ -2385,12 +2393,12 @@ class GameManager {
                     aggregatePoints += Math.round(totalPct / pctCount);
                     testCount++;
                 }
-            } else if (Array.isArray(value) && typeof value[0] === 'string' && value[0].includes('mistakes')) {
-                // Chimp test: 0 mistakes = 100, 4+ mistakes = 0
-                const match = value[0].match(/([\d.]+)\s*mistakes/);
+            } else if (Array.isArray(value) && typeof value[0] === 'string' && value[0].includes('Mistakes')) {
+                // Chimp test: 0 mistakes = 100, 1 mistake (0.2 avg) = 95, 2 (0.4 avg) = 90
+                const match = value[0].match(/Mistakes:\s*([\d.]+)/);
                 if (match) {
                     const avgMistakes = parseFloat(match[1]);
-                    aggregatePoints += Math.max(0, Math.round(100 - (avgMistakes / 4) * 100));
+                    aggregatePoints += Math.max(0, Math.round(100 - (avgMistakes * 25)));
                     testCount++;
                 }
             } else if (Array.isArray(value) && typeof value[0] === 'string' && value[0].includes('/')) {
