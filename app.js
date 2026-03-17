@@ -90,7 +90,7 @@ class GameManager {
             },
             mentalMath: {
                 title: "Mental Math",
-                desc: "Solve 12 math problems as fast as possible. You have <strong>15 seconds</strong> per question. Press Enter to submit."
+                desc: "Solve 12 math problems as fast as possible. You have <strong>20 seconds</strong> per question. Press Enter to submit."
             },
             storyMath: {
                 title: "Story Math",
@@ -533,6 +533,20 @@ class GameManager {
         const targetScreen = document.getElementById(screenId);
         if (targetScreen) {
             targetScreen.classList.add('active');
+
+            // Auto-focus inputs if they are visible on the new screen
+            const inputs = targetScreen.querySelectorAll('input[type="number"], input[type="text"]');
+            if (inputs.length > 0) {
+                // Focus the first visible input
+                const firstInput = Array.from(inputs).find(input =>
+                    input.parentElement.style.display !== 'none' &&
+                    input.style.display !== 'none' &&
+                    input.style.visibility !== 'hidden'
+                );
+                if (firstInput) {
+                    setTimeout(() => firstInput.focus(), 50);
+                }
+            }
         } else {
             console.error(`Screen ID not found: ${screenId}`);
         }
@@ -706,6 +720,11 @@ class GameManager {
             this.showScreen('menu-screen');
         });
 
+        document.getElementById('round-complete-btn').addEventListener('click', () => {
+            this.currentTestIndex++;
+            this.showInstructions();
+        });
+
         document.getElementById('submit-story-btn').addEventListener('click', () => {
             this.handleStorySubmit();
         });
@@ -781,6 +800,9 @@ class GameManager {
                 } else if (activeScreen.id === 'results-screen') {
                     e.preventDefault();
                     document.getElementById('next-test-btn').click();
+                } else if (activeScreen.id === 'round-complete-screen') {
+                    e.preventDefault();
+                    document.getElementById('round-complete-btn').click();
                 }
             }
         });
@@ -840,7 +862,15 @@ class GameManager {
         const testId = this.testSequence[this.currentTestIndex];
         const info = this.testInfo[testId];
 
-        document.getElementById('inst-title').innerHTML = info.title;
+        let titleHtml = info.title;
+        if (!this.gameData.isIndividualTest) {
+            const roundSize = 14;
+            const currentRound = Math.floor(this.currentTestIndex / roundSize) + 1;
+            const totalRounds = Math.ceil(this.testSequence.length / roundSize);
+            titleHtml = `<span style="font-size: 0.8em; opacity: 0.6; display: block; margin-bottom: 0.5rem; letter-spacing: 1px;">ROUND ${currentRound} OF ${totalRounds}</span>${info.title}`;
+        }
+
+        document.getElementById('inst-title').innerHTML = titleHtml;
         document.getElementById('inst-desc').innerHTML = info.desc;
 
         this.showScreen('instructions-screen');
@@ -1276,7 +1306,7 @@ class GameManager {
             this.gameData.currentMathAnswer = problem.answer;
         }
 
-        let timeLeft = isMental ? 15 : 60;
+        let timeLeft = isMental ? 20 : 60;
         const timerDisplay = document.getElementById('math-timer');
         timerDisplay.textContent = timeLeft;
 
@@ -1317,7 +1347,7 @@ class GameManager {
             scoreDisplay.innerHTML = `Score: <br><span style="color: var(--accent-color); font-size: 3rem;">${this.gameData.mathScore}/${this.gameData.mathRounds}</span><br><span style="font-size: 1.2rem;">Correct Answers</span>`;
             scoreDisplay.style.color = "var(--text-color)";
 
-            this.showScreen('results-screen');
+            this.proceedAfterTest();
         }
     }
 
@@ -1350,7 +1380,7 @@ class GameManager {
         scoreDisplay.innerHTML = html;
         scoreDisplay.style.color = "var(--text-color)";
 
-        this.showScreen('results-screen');
+        this.proceedAfterTest();
     }
 
     handleAddressSubmit() {
@@ -1370,7 +1400,7 @@ class GameManager {
         scoreDisplay.innerHTML = html;
         scoreDisplay.style.color = "var(--text-color)";
 
-        this.showScreen('results-screen');
+        this.proceedAfterTest();
     }
 
     // --- Spatial Memory Grid Methods ---
@@ -1566,7 +1596,7 @@ class GameManager {
             const scoreDisplay = document.getElementById('round-score');
             scoreDisplay.innerHTML = `Average Score:<br><span style="color: var(--accent-color); font-size: 3rem;">${avgPct}%</span> selected in correct order.`;
             scoreDisplay.style.color = "var(--text-color)";
-            this.showScreen('results-screen');
+            this.proceedAfterTest();
         } else {
             setTimeout(() => this.startSpatialMemoryGridSequential(), 500);
         }
@@ -1595,15 +1625,16 @@ class GameManager {
         if (this.gameData.currentTrialCount >= 5) {
             const sumPct = this.gameData.trialScores.reduce((a, b) => a + b, 0);
             const avgPct = Math.round(sumPct / 5);
-
             if (!this.state.scores['simultaneousSpatialMemory']) this.state.scores['simultaneousSpatialMemory'] = [];
             this.state.scores['simultaneousSpatialMemory'].push(`Average: ${avgPct}%`);
 
             const scoreDisplay = document.getElementById('round-score');
             scoreDisplay.innerHTML = `Average Score:<br><span style="color: var(--accent-color); font-size: 3rem;">${avgPct}%</span> correctly identified.`;
             scoreDisplay.style.color = "var(--text-color)";
-            this.showScreen('results-screen');
-        } else {
+
+            this.proceedAfterTest();
+        }
+        else {
             setTimeout(() => this.startSpatialMemoryGridSimultaneous(), 500);
         }
     }
@@ -1691,16 +1722,15 @@ class GameManager {
         } else {
             // Wrong click — count mistake and flash red
             this.gameData.chimpMistakes++;
-            cell.style.backgroundColor = 'rgba(255, 77, 77, 0.4)';
+            cell.style.backgroundColor = 'rgba(255, 77, 77, 0.6)';
             cell.style.borderColor = '#ff4d4d';
-            setTimeout(() => {
-                if (!cell.classList.contains('selected')) {
-                    cell.style.backgroundColor = '';
-                    cell.style.borderColor = '';
-                }
-            }, 400);
             this.playBeep(200, 0.15);
 
+            // Wait a bit before ending to show the mistake
+            this.gameData.isWaiting = true;
+            setTimeout(() => {
+                this.endChimpTrial();
+            }, 600);
             // Update prompt to show mistakes
             document.querySelector('#grid-memory-screen h2').textContent = `Chimp Test — Trial ${this.gameData.currentTrialCount + 1} of 5 (${this.gameData.chimpMistakes} mistake${this.gameData.chimpMistakes !== 1 ? 's' : ''})`;
         }
@@ -1716,12 +1746,13 @@ class GameManager {
             const avgMistakes = (totalMistakes / 5).toFixed(1);
 
             if (!this.state.scores['chimpTest']) this.state.scores['chimpTest'] = [];
-            this.state.scores['chimpTest'].push(`Avg: ${avgMistakes} mistakes`);
+            this.state.scores['chimpTest'].push(`Average Mistakes: ${avgMistakes}`);
 
             const scoreDisplay = document.getElementById('round-score');
-            scoreDisplay.innerHTML = `Average Mistakes:<br><span style="color: var(--accent-color); font-size: 3rem;">${avgMistakes}</span><br>across 5 trials.`;
+            scoreDisplay.innerHTML = `Average Mistakes:<br><span style="color: var(--accent-color); font-size: 4rem;">${avgMistakes}</span><br>across 5 trials.`;
             scoreDisplay.style.color = "var(--text-color)";
-            this.showScreen('results-screen');
+
+            this.proceedAfterTest();
         } else {
             setTimeout(() => this.startChimpTest(), 600);
         }
@@ -1805,7 +1836,7 @@ class GameManager {
             const scoreDisplay = document.getElementById('round-score');
             scoreDisplay.innerHTML = breakdownHTML;
             scoreDisplay.style.color = "var(--text-color)";
-            this.showScreen('results-screen');
+            this.proceedAfterTest();
         } else {
             // Next trial
             setTimeout(() => this.startSequentialNumberMemory(), 500);
@@ -1888,7 +1919,7 @@ class GameManager {
             const scoreDisplay = document.getElementById('round-score');
             scoreDisplay.innerHTML = breakdownHTML;
             scoreDisplay.style.color = "var(--text-color)";
-            this.showScreen('results-screen');
+            this.proceedAfterTest();
         } else {
             setTimeout(() => this.startReverseSequentialNumberMemory(), 500);
         }
@@ -2036,7 +2067,7 @@ class GameManager {
         `;
         scoreDisplay.style.color = "var(--text-color)";
 
-        this.showScreen('results-screen');
+        this.proceedAfterTest();
     }
 
     // --- Flanker Methods ---
@@ -2121,7 +2152,7 @@ class GameManager {
         scoreDisplay.innerHTML = `Avg: ${avgTime} ms<br><span style="font-size: 2rem; color: #cc3333">${this.gameData.flankerErrors} Errors</span>`;
         scoreDisplay.style.color = "var(--text-color)";
 
-        this.showScreen('results-screen');
+        this.proceedAfterTest();
     }
 
     // --- Generic Spacebar Handler ---
@@ -2194,7 +2225,30 @@ class GameManager {
         if (avgStr.includes("Fail")) scoreDisplay.style.color = "#cc3333";
         else scoreDisplay.style.color = "var(--text-color)";
 
-        this.showScreen('results-screen');
+        this.proceedAfterTest();
+    }
+
+    proceedAfterTest() {
+        if (this.gameData.isIndividualTest) {
+            this.showScreen('results-screen');
+        } else {
+            const roundSize = 14;
+            const completedTests = this.currentTestIndex + 1;
+            const isRoundEnd = completedTests % roundSize === 0;
+            const isLastTest = completedTests === this.testSequence.length;
+
+            if (isRoundEnd && !isLastTest) {
+                const currentRound = completedTests / roundSize;
+                const totalRounds = Math.ceil(this.testSequence.length / roundSize);
+                document.getElementById('round-complete-text').innerHTML = `You have finished all tests in <strong>Round ${currentRound} of ${totalRounds}</strong>.<br><br>Take a short break if needed, then click below to start the next round.`;
+                this.showScreen('round-complete-screen');
+            } else if (isLastTest) {
+                this.showFinalResults();
+            } else {
+                this.currentTestIndex++;
+                this.showInstructions();
+            }
+        }
     }
 
     showFinalResults() {
@@ -2262,8 +2316,23 @@ class GameManager {
     // --- State Persistence & UI Extras ---
     updateProgressBar() {
         const progressBar = document.getElementById('progress-bar');
-        const pct = ((this.currentTestIndex) / this.testSequence.length) * 100;
+        const progressInfo = document.getElementById('progress-info');
+        const totalTests = this.testSequence.length;
+        const currentTest = this.currentTestIndex + 1;
+
+        const pct = (this.currentTestIndex / totalTests) * 100;
         progressBar.style.width = `${pct}%`;
+
+        if (!this.gameData.isIndividualTest) {
+            const roundSize = 14;
+            const currentRound = Math.floor(this.currentTestIndex / roundSize) + 1;
+            const totalRounds = Math.ceil(totalTests / roundSize);
+            const testInRound = (this.currentTestIndex % roundSize) + 1;
+
+            progressInfo.textContent = `Round ${currentRound} of ${totalRounds} • Test ${testInRound} of ${roundSize}`;
+        } else {
+            progressInfo.textContent = "";
+        }
     }
 
     saveSettings() {

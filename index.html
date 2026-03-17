@@ -13,6 +13,9 @@
 
 <body>
     <div id="progress-container" style="display: none;">
+        <div id="progress-info"
+            style="text-align: center; font-size: 0.8rem; margin-bottom: 4px; color: var(--accent-color); letter-spacing: 1px; text-transform: uppercase; font-weight: 600;">
+        </div>
         <div id="progress-bar"></div>
     </div>
 
@@ -153,9 +156,15 @@
         </div>
 
         <div id="results-screen" class="screen">
-            <h1>Round Score</h1>
+            <h1 id="results-title">Round Score</h1>
             <div class="score-display" id="round-score">0 ms</div>
             <button id="next-test-btn">Next</button>
+        </div>
+
+        <div id="round-complete-screen" class="screen">
+            <h1>Round Complete</h1>
+            <p id="round-complete-text">You have finished all tests in this round.</p>
+            <button id="round-complete-btn">Continue to Next Round</button>
         </div>
 
         <div id="final-screen" class="screen">
