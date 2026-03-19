@@ -594,7 +594,7 @@ class GameManager {
             const numRounds = selectEl ? parseInt(selectEl.value) : 1;
             this.gameData.assessmentLengthStr = selectEl ? selectEl.options[selectEl.selectedIndex].text : "Short (1 Round)";
             this.gameData.assessmentStartTime = Date.now();
-
+            this.gameData.numRounds = numRounds; // Store to dynamically calculate round size later
             this.testSequence = [];
 
             for (let r = 0; r < numRounds; r++) {
@@ -864,7 +864,7 @@ class GameManager {
 
         let titleHtml = info.title;
         if (!this.gameData.isIndividualTest) {
-            const roundSize = 16;
+            const roundSize = this.testSequence.length / this.gameData.numRounds;
             const currentRound = Math.floor(this.currentTestIndex / roundSize) + 1;
             const totalRounds = Math.ceil(this.testSequence.length / roundSize);
             titleHtml = `<span style="font-size: 0.8em; opacity: 0.6; display: block; margin-bottom: 0.5rem; letter-spacing: 1px;">ROUND ${currentRound} OF ${totalRounds}</span>${info.title}`;
@@ -2240,7 +2240,7 @@ class GameManager {
         if (this.gameData.isIndividualTest) {
             this.showScreen('results-screen');
         } else {
-            const roundSize = 16;
+            const roundSize = this.testSequence.length / this.gameData.numRounds;
             const completedTests = this.currentTestIndex + 1;
             const isRoundEnd = completedTests % roundSize === 0;
             const isLastTest = completedTests === this.testSequence.length;
@@ -2332,7 +2332,7 @@ class GameManager {
         progressBar.style.width = `${pct}%`;
 
         if (!this.gameData.isIndividualTest) {
-            const roundSize = 16;
+            const roundSize = this.testSequence.length / this.gameData.numRounds;
             const currentRound = Math.floor(this.currentTestIndex / roundSize) + 1;
             const totalRounds = Math.ceil(totalTests / roundSize);
             const testInRound = (this.currentTestIndex % roundSize) + 1;
