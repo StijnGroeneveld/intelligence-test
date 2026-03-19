@@ -686,7 +686,7 @@ class GameManager {
             });
         });
 
-        const mathInput = document.getElementById('math-input');
+
         const submitMathBtn = document.getElementById('submit-math-btn');
         if (submitMathBtn) {
             submitMathBtn.addEventListener('click', () => this.handleMathSubmit());
@@ -1798,7 +1798,8 @@ class GameManager {
                 prompt.textContent = "Type the sequence (30s):";
                 input.focus();
 
-                // Add 30s timeout
+                // Add 30s timeout (clear the flash timeout first)
+                clearTimeout(this.gameData.timeoutId);
                 this.gameData.timeoutId = setTimeout(() => {
                     this.handleNumberSubmit();
                 }, 30000);
@@ -1882,7 +1883,8 @@ class GameManager {
                 prompt.textContent = "Type the sequence in REVERSE (30s):";
                 input.focus();
 
-                // Add 30s timeout
+                // Add 30s timeout (clear the flash timeout first)
+                clearTimeout(this.gameData.timeoutId);
                 this.gameData.timeoutId = setTimeout(() => {
                     this.handleReverseNumberSubmit();
                 }, 30000);
@@ -2350,6 +2352,72 @@ class GameManager {
         }
     }
 
+    // --- Shared Scoring Utility ---
+    // Single source of truth for computing a 0-100 metric score from raw test data.
+    // Returns null for tests that don't contribute to the overall metric.
+    computeScoreForTest(key, value) {
+        if (key === 'storyMemoryQuestions' || key === 'storyMemoryReading' || key === 'addressMemoryReading' || key === 'addressMemoryQuestions') return null;
+        if (!Array.isArray(value) || value.length === 0) return null;
+
+        if (typeof value[0] === 'object' && value[0].avgReaction !== undefined) {
+            const avg = Math.round(value.reduce((a, b) => a + (b.avgReaction || 0), 0) / value.length);
+            if (key === 'flankerArrow') {
+                let flankerScore = Math.max(0, Math.min(100, Math.round(100 * (700 - avg) / 450)));
+                const totalErrors = value.reduce((a, b) => a + (b.errors || 0), 0);
+                const avgErrors = totalErrors / value.length;
+                flankerScore = Math.max(0, Math.round(flankerScore - avgErrors * 5));
+                return flankerScore;
+            } else {
+                return Math.max(0, Math.min(100, Math.round(100 * (500 - avg) / 350)));
+            }
+        } else if (typeof value[0] === 'string' && value[0].includes('%')) {
+            let totalPct = 0, pctCount = 0;
+            for (const v of value) {
+                const match = v.match(/(\d+)%/);
+                if (match) { totalPct += parseInt(match[1]); pctCount++; }
+            }
+            return pctCount > 0 ? Math.round(totalPct / pctCount) : null;
+        } else if (typeof value[0] === 'string' && value[0].includes('Mistakes')) {
+            const match = value[0].match(/Mistakes:\s*([\d.]+)/);
+            if (match) {
+                const avgMistakes = parseFloat(match[1]);
+                return Math.max(0, Math.round(100 - (avgMistakes * 25)));
+            }
+        } else if (typeof value[0] === 'string' && value[0].includes('Points')) {
+            let totalPts = 0, ptsCount = 0;
+            for (const v of value) {
+                const m = v.match(/(\d+)\s*Points/);
+                if (m) { totalPts += parseInt(m[1]); ptsCount++; }
+            }
+            return ptsCount > 0 ? Math.round(totalPts / ptsCount) : null;
+        } else if (typeof value[0] === 'string' && value[0].includes('/')) {
+            let totalPct = 0, partCount = 0;
+            for (const v of value) {
+                const m = v.match(/([\d.]+)\/([\d.]+)/);
+                if (m) { totalPct += (parseFloat(m[1]) / parseFloat(m[2])) * 100; partCount++; }
+            }
+            return partCount > 0 ? Math.round(totalPct / partCount) : null;
+        } else if (typeof value[0] === 'string' && value[0].includes('Hits')) {
+            let totalPct = 0, nCount = 0;
+            for (const v of value) {
+                const hitsMatch = v.match(/Hits:\s*(\d+)/);
+                const faMatch = v.match(/False Alarms:\s*(\d+)/);
+                const missesMatch = v.match(/Misses:\s*(\d+)/);
+                if (hitsMatch && missesMatch) {
+                    const hits = parseInt(hitsMatch[1]);
+                    const fa = faMatch ? parseInt(faMatch[1]) : 0;
+                    const misses = parseInt(missesMatch[1]);
+                    const total = hits + misses;
+                    const score = total > 0 ? Math.max(0, Math.round(((hits - fa) / total) * 100)) : 0;
+                    totalPct += score;
+                    nCount++;
+                }
+            }
+            return nCount > 0 ? Math.round(totalPct / nCount) : null;
+        }
+        return null;
+    }
+
     saveToHistory() {
         let history = JSON.parse(localStorage.getItem('cognitiveTestHistory')) || [];
 
@@ -2358,91 +2426,10 @@ class GameManager {
         let testCount = 0;
 
         for (const [key, value] of Object.entries(this.state.scores)) {
-            if (key === 'storyMemoryQuestions' || key === 'storyMemoryReading' || key === 'addressMemoryReading' || key === 'addressMemoryQuestions') continue;
-
-            if (Array.isArray(value) && typeof value[0] === 'object') {
-                if (value[0].avgReaction !== undefined) {
-                    const avg = Math.round(value.reduce((a, b) => a + (b.avgReaction || 0), 0) / value.length);
-                    if (key === 'flankerArrow') {
-                        // Flanker: softer scale. 250ms = 100, 700ms = 0, minus 5 per error
-                        let flankerScore = Math.max(0, Math.min(100, Math.round(100 * (700 - avg) / 450)));
-                        const totalErrors = value.reduce((a, b) => a + (b.errors || 0), 0);
-                        const avgErrors = totalErrors / value.length;
-                        flankerScore = Math.max(0, Math.round(flankerScore - avgErrors * 5));
-                        aggregatePoints += flankerScore;
-                    } else {
-                        // Reaction tests: 150ms = 100, 500ms = 0
-                        aggregatePoints += Math.max(0, Math.min(100, Math.round(100 * (500 - avg) / 350)));
-                    }
-                    testCount++;
-                }
-            } else if (Array.isArray(value) && typeof value[0] === 'string' && value[0].includes('%')) {
-                // Spatial memory: average percentage across rounds
-                let totalPct = 0;
-                let pctCount = 0;
-                for (const v of value) {
-                    const match = v.match(/(\d+)%/);
-                    if (match) { totalPct += parseInt(match[1]); pctCount++; }
-                }
-                if (pctCount > 0) {
-                    aggregatePoints += Math.round(totalPct / pctCount);
-                    testCount++;
-                }
-            } else if (Array.isArray(value) && typeof value[0] === 'string' && value[0].includes('Mistakes')) {
-                // Chimp test: 0 mistakes = 100, 1 mistake (0.2 avg) = 95, 2 (0.4 avg) = 90
-                const match = value[0].match(/Mistakes:\s*([\d.]+)/);
-                if (match) {
-                    const avgMistakes = parseFloat(match[1]);
-                    aggregatePoints += Math.max(0, Math.round(100 - (avgMistakes * 25)));
-                    testCount++;
-                }
-            } else if (Array.isArray(value) && typeof value[0] === 'string' && value[0].includes('Points')) {
-                // Math tests: "83 Points"
-                let totalPts = 0;
-                let ptsCount = 0;
-                for (const v of value) {
-                    const m = v.match(/(\d+)\s*Points/);
-                    if (m) { totalPts += parseInt(m[1]); ptsCount++; }
-                }
-                if (ptsCount > 0) {
-                    aggregatePoints += Math.round(totalPts / ptsCount);
-                    testCount++;
-                }
-            } else if (Array.isArray(value) && typeof value[0] === 'string' && value[0].includes('/')) {
-
-                // Number memory: "Average: 8.2/9 Digits" — average across rounds
-                let totalPct = 0;
-                let partCount = 0;
-                for (const v of value) {
-                    const m = v.match(/([\d.]+)\/([\d.]+)/);
-                    if (m) { totalPct += (parseFloat(m[1]) / parseFloat(m[2])) * 100; partCount++; }
-                }
-                if (partCount > 0) {
-                    aggregatePoints += Math.round(totalPct / partCount);
-                    testCount++;
-                }
-            } else if (Array.isArray(value) && typeof value[0] === 'string' && value[0].includes('Hits')) {
-                // N-Back: "Hits: X, False Alarms: Y, Misses: Z" — average across rounds
-                let totalPct = 0;
-                let nCount = 0;
-                for (const v of value) {
-                    const hitsMatch = v.match(/Hits:\s*(\d+)/);
-                    const faMatch = v.match(/False Alarms:\s*(\d+)/);
-                    const missesMatch = v.match(/Misses:\s*(\d+)/);
-                    if (hitsMatch && missesMatch) {
-                        const hits = parseInt(hitsMatch[1]);
-                        const fa = faMatch ? parseInt(faMatch[1]) : 0;
-                        const misses = parseInt(missesMatch[1]);
-                        const total = hits + misses;
-                        const score = total > 0 ? Math.max(0, Math.round(((hits - fa) / total) * 100)) : 0;
-                        totalPct += score;
-                        nCount++;
-                    }
-                }
-                if (nCount > 0) {
-                    aggregatePoints += Math.round(totalPct / nCount);
-                    testCount++;
-                }
+            const score = this.computeScoreForTest(key, value);
+            if (score !== null) {
+                aggregatePoints += score;
+                testCount++;
             }
         }
 
@@ -2528,67 +2515,7 @@ class GameManager {
         }
 
         // Helper to compute per-test metric score (0-100), returns null if not applicable
-        const computeTestMetric = (key, value) => {
-            if (key === 'storyMemoryQuestions' || key === 'storyMemoryReading' || key === 'addressMemoryReading' || key === 'addressMemoryQuestions') return null;
-            if (!Array.isArray(value) || value.length === 0) return null;
-
-            if (typeof value[0] === 'object' && value[0].avgReaction !== undefined) {
-                const avg = Math.round(value.reduce((a, b) => a + (b.avgReaction || 0), 0) / value.length);
-                if (key === 'flankerArrow') {
-                    // Flanker: softer scale. 250ms = 100, 700ms = 0, minus 5 per error
-                    let flankerScore = Math.max(0, Math.min(100, Math.round(100 * (700 - avg) / 450)));
-                    const totalErrors = value.reduce((a, b) => a + (b.errors || 0), 0);
-                    const avgErrors = totalErrors / value.length;
-                    flankerScore = Math.max(0, Math.round(flankerScore - avgErrors * 5));
-                    return flankerScore;
-                } else {
-                    // Reaction tests: 150ms = 100, 500ms = 0
-                    return Math.max(0, Math.min(100, Math.round(100 * (500 - avg) / 350)));
-                }
-            } else if (typeof value[0] === 'string' && value[0].includes('%')) {
-                // Spatial memory: average percentage across rounds
-                let totalPct = 0, pctCount = 0;
-                for (const v of value) {
-                    const match = v.match(/(\d+)%/);
-                    if (match) { totalPct += parseInt(match[1]); pctCount++; }
-                }
-                return pctCount > 0 ? Math.round(totalPct / pctCount) : null;
-            } else if (typeof value[0] === 'string' && value[0].includes('mistakes')) {
-                // Chimp test: 0 mistakes = 100, 4+ = 0
-                const match = value[0].match(/([\d.]+)\s*mistakes/);
-                if (match) {
-                    const avgMistakes = parseFloat(match[1]);
-                    return Math.max(0, Math.round(100 - (avgMistakes / 4) * 100));
-                }
-            } else if (typeof value[0] === 'string' && value[0].includes('/')) {
-                // Number memory: "Average: 8.2/9 Digits" — average across rounds
-                let totalPct = 0, partCount = 0;
-                for (const v of value) {
-                    const m = v.match(/([\d.]+)\/([\d.]+)/);
-                    if (m) { totalPct += (parseFloat(m[1]) / parseFloat(m[2])) * 100; partCount++; }
-                }
-                return partCount > 0 ? Math.round(totalPct / partCount) : null;
-            } else if (typeof value[0] === 'string' && value[0].includes('Hits')) {
-                // N-Back: "Hits: X, False Alarms: Y, Misses: Z" — average across rounds
-                let totalPct = 0, nCount = 0;
-                for (const v of value) {
-                    const hitsMatch = v.match(/Hits:\s*(\d+)/);
-                    const faMatch = v.match(/False Alarms:\s*(\d+)/);
-                    const missesMatch = v.match(/Misses:\s*(\d+)/);
-                    if (hitsMatch && missesMatch) {
-                        const hits = parseInt(hitsMatch[1]);
-                        const fa = faMatch ? parseInt(faMatch[1]) : 0;
-                        const misses = parseInt(missesMatch[1]);
-                        const total = hits + misses;
-                        const score = total > 0 ? Math.max(0, Math.round(((hits - fa) / total) * 100)) : 0;
-                        totalPct += score;
-                        nCount++;
-                    }
-                }
-                return nCount > 0 ? Math.round(totalPct / nCount) : null;
-            }
-            return null;
-        };
+        const computeTestMetric = (key, value) => this.computeScoreForTest(key, value);
 
         // Compute overall metric
         let aggregatePoints = 0;
@@ -2639,7 +2566,7 @@ class GameManager {
         html += '</tr></thead><tbody>';
 
         // Define display order: scored tests first, then question rounds
-        const scoredTests = ['audioReaction', 'visualReaction', 'inhibitoryControl', 'flankerArrow', 'visualSpatialMemory', 'simultaneousSpatialMemory', 'sequentialNumberMemory', 'reverseSequentialNumberMemory', 'nBackTask', 'chimpTest'];
+        const scoredTests = ['audioReaction', 'visualReaction', 'inhibitoryControl', 'flankerArrow', 'visualSpatialMemory', 'simultaneousSpatialMemory', 'sequentialNumberMemory', 'reverseSequentialNumberMemory', 'nBackTask', 'chimpTest', 'mentalMath', 'storyMath'];
         const questionTests = ['storyMemoryQuestions', 'addressMemoryQuestions'];
         const allTests = [...scoredTests, ...questionTests];
 
