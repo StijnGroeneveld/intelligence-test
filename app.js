@@ -598,7 +598,7 @@ class GameManager {
             this.testSequence = [];
 
             for (let r = 0; r < numRounds; r++) {
-                const testsRound = ['audioReaction', 'visualReaction', 'inhibitoryControl', 'flankerArrow', 'visualSpatialMemory', 'simultaneousSpatialMemory', 'sequentialNumberMemory', 'reverseSequentialNumberMemory', 'nBackTask', 'chimpTest'];
+                const testsRound = ['audioReaction', 'visualReaction', 'inhibitoryControl', 'flankerArrow', 'visualSpatialMemory', 'simultaneousSpatialMemory', 'sequentialNumberMemory', 'reverseSequentialNumberMemory', 'nBackTask', 'chimpTest', 'mentalMath', 'storyMath'];
 
                 // Shuffle standard tests
                 for (let i = testsRound.length - 1; i > 0; i--) {
@@ -864,7 +864,7 @@ class GameManager {
 
         let titleHtml = info.title;
         if (!this.gameData.isIndividualTest) {
-            const roundSize = 14;
+            const roundSize = 16;
             const currentRound = Math.floor(this.currentTestIndex / roundSize) + 1;
             const totalRounds = Math.ceil(this.testSequence.length / roundSize);
             titleHtml = `<span style="font-size: 0.8em; opacity: 0.6; display: block; margin-bottom: 0.5rem; letter-spacing: 1px;">ROUND ${currentRound} OF ${totalRounds}</span>${info.title}`;
@@ -2240,7 +2240,7 @@ class GameManager {
         if (this.gameData.isIndividualTest) {
             this.showScreen('results-screen');
         } else {
-            const roundSize = 14;
+            const roundSize = 16;
             const completedTests = this.currentTestIndex + 1;
             const isRoundEnd = completedTests % roundSize === 0;
             const isLastTest = completedTests === this.testSequence.length;
@@ -2332,7 +2332,7 @@ class GameManager {
         progressBar.style.width = `${pct}%`;
 
         if (!this.gameData.isIndividualTest) {
-            const roundSize = 14;
+            const roundSize = 16;
             const currentRound = Math.floor(this.currentTestIndex / roundSize) + 1;
             const totalRounds = Math.ceil(totalTests / roundSize);
             const testInRound = (this.currentTestIndex % roundSize) + 1;
@@ -2401,7 +2401,20 @@ class GameManager {
                     aggregatePoints += Math.max(0, Math.round(100 - (avgMistakes * 25)));
                     testCount++;
                 }
+            } else if (Array.isArray(value) && typeof value[0] === 'string' && value[0].includes('Points')) {
+                // Math tests: "83 Points"
+                let totalPts = 0;
+                let ptsCount = 0;
+                for (const v of value) {
+                    const m = v.match(/(\d+)\s*Points/);
+                    if (m) { totalPts += parseInt(m[1]); ptsCount++; }
+                }
+                if (ptsCount > 0) {
+                    aggregatePoints += Math.round(totalPts / ptsCount);
+                    testCount++;
+                }
             } else if (Array.isArray(value) && typeof value[0] === 'string' && value[0].includes('/')) {
+
                 // Number memory: "Average: 8.2/9 Digits" — average across rounds
                 let totalPct = 0;
                 let partCount = 0;
