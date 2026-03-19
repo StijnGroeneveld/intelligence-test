@@ -687,11 +687,6 @@ class GameManager {
         });
 
         const mathInput = document.getElementById('math-input');
-        if (mathInput) {
-            mathInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') this.handleMathSubmit();
-            });
-        }
         const submitMathBtn = document.getElementById('submit-math-btn');
         if (submitMathBtn) {
             submitMathBtn.addEventListener('click', () => this.handleMathSubmit());
