@@ -81,12 +81,17 @@
 
         <div id="minigame-screen" class="screen">
             <h2 id="minigame-prompt"></h2>
+            <div id="reaction-touch-zone" class="touch-zone">TAP</div>
         </div>
 
         <div id="flanker-screen" class="screen">
             <div class="flanker-container">
                 <div id="flanker-feedback" class="flanker-feedback"></div>
                 <div id="flanker-arrows" class="flanker-arrows"></div>
+            </div>
+            <div class="touch-zone-split">
+                <div id="flanker-touch-left" class="touch-zone-half touch-zone-left">← LEFT</div>
+                <div id="flanker-touch-right" class="touch-zone-half touch-zone-right">RIGHT →</div>
             </div>
         </div>
 
@@ -163,6 +168,7 @@
             <h2>Press Spacebar if letter matches the one from 2 steps ago.</h2>
             <div id="nback-letter-display" class="nback-letter"></div>
             <div id="nback-feedback" class="nback-feedback"></div>
+            <div id="nback-touch-zone" class="touch-zone">TAP IF MATCH</div>
         </div>
 
         <div id="results-screen" class="screen">

@@ -1,4 +1,8 @@
 class GameManager {
+    isTouchDevice() {
+        return window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    }
+
     constructor() {
         this.appContainer = document.getElementById('app');
 
@@ -38,19 +42,19 @@ class GameManager {
             },
             audioReaction: {
                 title: "Audio Reaction Time",
-                desc: "The screen will instruct you to wait. When you hear a <strong>beep</strong>, press the <strong>Spacebar</strong> as fast as you can. Make sure your volume is turned on."
+                desc: `The screen will instruct you to wait. When you hear a <strong>beep</strong>, ${this.isTouchDevice() ? '<strong>tap the screen</strong>' : 'press the <strong>Spacebar</strong>'} as fast as you can. Make sure your volume is turned on.`
             },
             visualReaction: {
                 title: "Visual Reaction Time",
-                desc: "The screen will turn red. When it turns green, press the <strong>Spacebar</strong> as fast as you can. Do not press it before."
+                desc: `The screen will turn red. When it turns green, ${this.isTouchDevice() ? '<strong>tap the screen</strong>' : 'press the <strong>Spacebar</strong>'} as fast as you can. Do not press it before.`
             },
             inhibitoryControl: {
                 title: "Inhibitory Control",
-                desc: "The screen will be red. Press the <strong>Spacebar</strong> ONLY when it turns green. A distractor beep may play randomly. If you press the Spacebar on the beep before the color changes, you fail the round."
+                desc: `The screen will be red. ${this.isTouchDevice() ? '<strong>Tap the screen</strong>' : 'Press the <strong>Spacebar</strong>'} ONLY when it turns green. A distractor beep may play randomly. If you ${this.isTouchDevice() ? 'tap' : 'press the Spacebar'} on the beep before the color changes, you fail the round.`
             },
             flankerArrow: {
                 title: "Flanker Arrow Task",
-                desc: "A row of 5 arrows will flash on screen. Look ONLY at the <strong>middle arrow</strong>.<br><br>Press the <strong>Left Arrow Key</strong> if it points left (←).<br>Press the <strong>Right Arrow Key</strong> if it points right (→).<br><br>Ignore the outer arrows. This will repeat 10 times. Be as fast and accurate as possible."
+                desc: `A row of 5 arrows will flash on screen. Look ONLY at the <strong>middle arrow</strong>.<br><br>${this.isTouchDevice() ? 'Tap the <strong>LEFT</strong> zone if it points left (←).<br>Tap the <strong>RIGHT</strong> zone if it points right (→).' : 'Press the <strong>Left Arrow Key</strong> if it points left (←).<br>Press the <strong>Right Arrow Key</strong> if it points right (→).'}<br><br>Ignore the outer arrows. This will repeat 10 times. Be as fast and accurate as possible.`
             },
             visualSpatialMemory: {
                 title: "Sequential Spatial Memory",
@@ -70,7 +74,7 @@ class GameManager {
             },
             nBackTask: {
                 title: "N-Back Task (2-Back)",
-                desc: "A sequence of 25 letters will appear one by one.<br><br>Press the <strong>Spacebar</strong> ONLY if the current letter matches the letter you saw <strong>2 steps ago</strong> (e.g., A -> B -> A).<br><br>Do not press anything if it does not match."
+                desc: `A sequence of 25 letters will appear one by one.<br><br>${this.isTouchDevice() ? '<strong>Tap the screen</strong>' : 'Press the <strong>Spacebar</strong>'} ONLY if the current letter matches the letter you saw <strong>2 steps ago</strong> (e.g., A -> B -> A).<br><br>Do not ${this.isTouchDevice() ? 'tap' : 'press anything'} if it does not match.`
             },
             storyMemoryQuestions: {
                 title: "Story Memory Recall",
@@ -801,6 +805,47 @@ class GameManager {
                 }
             }
         });
+
+        // --- Mobile Touch Zones ---
+        // Reaction tests (audio, visual, inhibitory control) — tap = spacebar
+        const reactionTouchZone = document.getElementById('reaction-touch-zone');
+        if (reactionTouchZone) {
+            reactionTouchZone.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const activeScreen = document.querySelector('.screen.active');
+                if (activeScreen && activeScreen.id === 'minigame-screen') {
+                    this.handleSpacebarReaction();
+                }
+            });
+        }
+
+        // N-Back — tap = spacebar
+        const nbackTouchZone = document.getElementById('nback-touch-zone');
+        if (nbackTouchZone) {
+            nbackTouchZone.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const activeScreen = document.querySelector('.screen.active');
+                if (activeScreen && activeScreen.id === 'nback-screen') {
+                    this.handleNBackSpacebar();
+                }
+            });
+        }
+
+        // Flanker — left/right tap zones = arrow keys
+        const flankerLeft = document.getElementById('flanker-touch-left');
+        const flankerRight = document.getElementById('flanker-touch-right');
+        if (flankerLeft) {
+            flankerLeft.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.handleFlankerInput('ArrowLeft');
+            });
+        }
+        if (flankerRight) {
+            flankerRight.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.handleFlankerInput('ArrowRight');
+            });
+        }
     }
 
     startGameplay() {
@@ -1215,7 +1260,7 @@ class GameManager {
 
                 this.appContainer.style.backgroundColor = '#33cc33';
                 document.body.style.backgroundColor = '#33cc33';
-                prompt.textContent = "PRESS SPACEBAR!";
+                prompt.textContent = this.isTouchDevice() ? "TAP NOW!" : "PRESS SPACEBAR!";
                 prompt.style.color = "#ffffff";
 
                 this.gameData.startTime = performance.now();
@@ -1242,7 +1287,7 @@ class GameManager {
 
                 this.appContainer.style.backgroundColor = '#33cc33';
                 document.body.style.backgroundColor = '#33cc33';
-                prompt.textContent = "PRESS SPACEBAR!";
+                prompt.textContent = this.isTouchDevice() ? "TAP NOW!" : "PRESS SPACEBAR!";
                 prompt.style.color = "#ffffff";
 
                 this.gameData.startTime = performance.now();
@@ -1999,7 +2044,7 @@ class GameManager {
 
         // Add progress counter
         const h2 = document.querySelector('#nback-screen h2');
-        h2.textContent = `Press Spacebar if letter matches the one from 2 steps ago. (1/25)`;
+        h2.textContent = `${this.isTouchDevice() ? 'Tap' : 'Press Spacebar'} if letter matches the one from 2 steps ago. (1/25)`;
 
         const showNextLetter = () => {
             if (this.gameData.nBackCurrentIndex >= this.gameData.nBackSequence.length) {
@@ -2015,7 +2060,7 @@ class GameManager {
             display.textContent = char;
 
             // Update counter
-            document.querySelector('#nback-screen h2').textContent = `Press Spacebar if letter matches the one from 2 steps ago. (${idx + 1}/25)`;
+            document.querySelector('#nback-screen h2').textContent = `${this.isTouchDevice() ? 'Tap' : 'Press Spacebar'} if letter matches the one from 2 steps ago. (${idx + 1}/25)`;
 
             // Determine if it is a target
             this.gameData.nBackCurrentTarget = (idx >= 2 && this.gameData.nBackSequence[idx] === this.gameData.nBackSequence[idx - 2]);
