@@ -878,13 +878,6 @@ class GameManager {
         if (this.gameData.audioCtx.state === 'suspended') {
             this.gameData.audioCtx.resume();
         }
-
-        // Unlock audio for iOS by playing a silent, empty buffer immediately on user interaction
-        const buffer = this.gameData.audioCtx.createBuffer(1, 1, 22050);
-        const source = this.gameData.audioCtx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(this.gameData.audioCtx.destination);
-        source.start(0);
     }
 
     playBeep(frequency = 440, duration = 0.2) {

@@ -458,8 +458,8 @@ body.light-mode #progress-container {
 /* Icon Buttons (Settings) */
 .icon-btn {
     position: absolute;
-    top: 2rem;
-    right: 2rem;
+    top: 10px;
+    right: 10px;
     padding: 0.5rem;
     font-size: 1.5rem;
     border: none;
