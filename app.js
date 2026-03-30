@@ -1880,7 +1880,8 @@ class GameManager {
             this.state.scores['sequentialNumberMemory'].push(`Average: ${avgCount}/9 Digits`);
 
             const breakdownHTML = this.generateNumberBreakdownHTML(avgCount, "Sequential Numbers");
-            this.state.breakdowns['sequentialNumberMemory'] = breakdownHTML;
+            if (!this.state.breakdowns['sequentialNumberMemory']) this.state.breakdowns['sequentialNumberMemory'] = [];
+            this.state.breakdowns['sequentialNumberMemory'].push(breakdownHTML);
 
             const scoreDisplay = document.getElementById('round-score');
             scoreDisplay.innerHTML = breakdownHTML;
@@ -1964,7 +1965,8 @@ class GameManager {
             this.state.scores['reverseSequentialNumberMemory'].push(`Average: ${avgCount}/9 Digits`);
 
             const breakdownHTML = this.generateNumberBreakdownHTML(avgCount, "Reverse Numbers");
-            this.state.breakdowns['reverseSequentialNumberMemory'] = breakdownHTML;
+            if (!this.state.breakdowns['reverseSequentialNumberMemory']) this.state.breakdowns['reverseSequentialNumberMemory'] = [];
+            this.state.breakdowns['reverseSequentialNumberMemory'].push(breakdownHTML);
 
             const scoreDisplay = document.getElementById('round-score');
             scoreDisplay.innerHTML = breakdownHTML;
@@ -2344,13 +2346,24 @@ class GameManager {
 
         html += '</ul>';
 
-        if (this.state.breakdowns && this.state.breakdowns['sequentialNumberMemory']) {
-            html += '<h3 style="margin-top: 3rem; text-align: center; color: var(--text-color);">Sequential Numbers Breakdown</h3>';
-            html += this.state.breakdowns['sequentialNumberMemory'];
-        }
-        if (this.state.breakdowns && this.state.breakdowns['reverseSequentialNumberMemory']) {
-            html += '<h3 style="margin-top: 3rem; text-align: center; color: var(--text-color);">Reverse Numbers Breakdown</h3>';
-            html += this.state.breakdowns['reverseSequentialNumberMemory'];
+        const renderResultsBreakdown = (title, breakdownsData) => {
+            if (!breakdownsData || breakdownsData.length === 0) return '';
+            const arr = Array.isArray(breakdownsData) ? breakdownsData : [breakdownsData];
+            let res = `<h3 style="margin-top: 3rem; text-align: center; color: var(--text-color);">${title}</h3>`;
+            res += `<div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">`;
+            arr.forEach((htmlBlock, i) => {
+                res += `<div style="flex: 1; min-width: 250px; max-width: 400px; background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">`;
+                if (arr.length > 1) res += `<h4 style="margin-top: 0; text-align: center; color: var(--accent-color);">Round ${i + 1}</h4>`;
+                res += htmlBlock;
+                res += `</div>`;
+            });
+            res += `</div>`;
+            return res;
+        };
+
+        if (this.state.breakdowns) {
+            html += renderResultsBreakdown('Sequential Numbers Breakdown', this.state.breakdowns['sequentialNumberMemory']);
+            html += renderResultsBreakdown('Reverse Numbers Breakdown', this.state.breakdowns['reverseSequentialNumberMemory']);
         }
 
         summaryDiv.innerHTML = html;
@@ -2407,13 +2420,15 @@ class GameManager {
         if (typeof value[0] === 'object' && value[0].avgReaction !== undefined) {
             const avg = Math.round(value.reduce((a, b) => a + (b.avgReaction || 0), 0) / value.length);
             if (key === 'flankerArrow') {
-                let flankerScore = Math.max(0, Math.min(100, Math.round(100 * (700 - avg) / 450)));
+                // 100 points = 300ms or faster. 0 points = 700ms or slower. (Range = 400ms)
+                let flankerScore = Math.max(0, Math.min(100, Math.round(100 * (700 - avg) / 400)));
                 const totalErrors = value.reduce((a, b) => a + (b.errors || 0), 0);
                 const avgErrors = totalErrors / value.length;
                 flankerScore = Math.max(0, Math.round(flankerScore - avgErrors * 5));
                 return flankerScore;
             } else {
-                return Math.max(0, Math.min(100, Math.round(100 * (500 - avg) / 350)));
+                // 100 points = 200ms or faster. 0 points = 500ms or slower. (Range = 300ms)
+                return Math.max(0, Math.min(100, Math.round(100 * (500 - avg) / 300)));
             }
         } else if (typeof value[0] === 'string' && value[0].includes('%')) {
             let totalPct = 0, pctCount = 0;
@@ -2661,14 +2676,23 @@ class GameManager {
         html += '</tbody></table>';
 
         if (run.rawBreakdowns) {
-            if (run.rawBreakdowns['sequentialNumberMemory']) {
-                html += '<h4 style="margin-top: 2rem; color: var(--text-color);">Sequential Numbers Breakdown</h4>';
-                html += run.rawBreakdowns['sequentialNumberMemory'];
-            }
-            if (run.rawBreakdowns['reverseSequentialNumberMemory']) {
-                html += '<h4 style="margin-top: 2rem; color: var(--text-color);">Reverse Numbers Breakdown</h4>';
-                html += run.rawBreakdowns['reverseSequentialNumberMemory'];
-            }
+            const renderHistoryBreakdown = (title, breakdownsData) => {
+                if (!breakdownsData || breakdownsData.length === 0) return '';
+                const arr = Array.isArray(breakdownsData) ? breakdownsData : [breakdownsData];
+                let res = `<h4 style="margin-top: 2rem; text-align: center; color: var(--text-color);">${title}</h4>`;
+                res += `<div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">`;
+                arr.forEach((htmlBlock, i) => {
+                    res += `<div style="flex: 1; min-width: 250px; max-width: 400px; background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">`;
+                    if (arr.length > 1) res += `<h5 style="margin-top: 0; text-align: center; color: var(--accent-color);">Round ${i + 1}</h5>`;
+                    res += htmlBlock;
+                    res += `</div>`;
+                });
+                res += `</div>`;
+                return res;
+            };
+
+            html += renderHistoryBreakdown('Sequential Numbers Breakdown', run.rawBreakdowns['sequentialNumberMemory']);
+            html += renderHistoryBreakdown('Reverse Numbers Breakdown', run.rawBreakdowns['reverseSequentialNumberMemory']);
         }
 
         detailContainer.innerHTML = html;
