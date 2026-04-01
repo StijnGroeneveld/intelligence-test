@@ -302,6 +302,126 @@ class GameManager {
                     { prompt: "What day of the week was it?", options: ["Friday", "Saturday", "Sunday"], answer: "2" },
                     { prompt: "Who were the treats for?", options: ["Himself only", "His family", "His friends"], answer: "2" }
                 ]
+            },
+            {
+                text: "David traveled to Iceland in the middle of winter to photograph the Northern Lights. Despite the freezing temperatures, he drove his rented jeep 4 hours outside of Reykjavik and finally captured a perfect shot using a 30-second exposure.",
+                questions: [
+                    { prompt: "What country did David travel to?", options: ["Norway", "Iceland", "Greenland"], answer: "1" },
+                    { prompt: "What was he trying to photograph?", options: ["Glaciers", "Whales", "Northern Lights"], answer: "2" },
+                    { prompt: "How far did he drive from the city?", options: ["2 hours", "4 hours", "6 hours"], answer: "1" },
+                    { prompt: "What city did he leave from?", options: ["Oslo", "Reykjavik", "Stockholm"], answer: "1" },
+                    { prompt: "How long was the camera exposure?", options: ["30 seconds", "1 minute", "10 seconds"], answer: "0" }
+                ]
+            },
+            {
+                text: "Emma, an aspiring pastry chef, flew to Florence, Italy for a two-week intensive culinary masterclass. On her final day, she successfully baked 24 perfect almond croissants that earned her the top prize from the head instructor.",
+                questions: [
+                    { prompt: "What city did Emma fly to?", options: ["Rome", "Milan", "Florence"], answer: "2" },
+                    { prompt: "How long was her masterclass?", options: ["One week", "Two weeks", "One month"], answer: "1" },
+                    { prompt: "What is Emma's profession?", options: ["Restaurant manager", "Pastry chef", "Food critic"], answer: "1" },
+                    { prompt: "How many croissants did she bake?", options: ["12", "18", "24"], answer: "2" },
+                    { prompt: "What kind of croissants were they?", options: ["Chocolate", "Almond", "Butter"], answer: "1" }
+                ]
+            },
+            {
+                text: "Chris spent his entire Saturday morning hunting for vintage car parts at a massive swap meet in Detroit. He haggled with three different vendors and finally walked away with a pristine 1968 Mustang steering wheel for exactly $150.",
+                questions: [
+                    { prompt: "What day of the week was it?", options: ["Friday", "Saturday", "Sunday"], answer: "1" },
+                    { prompt: "What city was the swap meet in?", options: ["Detroit", "Chicago", "Indianapolis"], answer: "0" },
+                    { prompt: "How many vendors did he haggle with?", options: ["Two", "Three", "Five"], answer: "1" },
+                    { prompt: "What specific part did he buy?", options: ["Carburetor", "Windshield", "Steering wheel"], answer: "2" },
+                    { prompt: "How much did he pay for it?", options: ["$100", "$150", "$200"], answer: "1" }
+                ]
+            },
+            {
+                text: "Sophie, a marine biologist, spent the summer stationed at a research facility on the Great Barrier Reef in Australia. During a deep dive in July, she tagged exactly 7 rare sea turtles to track their migration patterns.",
+                questions: [
+                    { prompt: "What is Sophie's profession?", options: ["Scuba instructor", "Marine biologist", "Oceanographer"], answer: "1" },
+                    { prompt: "Where was she stationed?", options: ["Galapagos", "Caribbean", "Great Barrier Reef"], answer: "2" },
+                    { prompt: "What month did she do her deep dive?", options: ["June", "July", "August"], answer: "1" },
+                    { prompt: "How many sea turtles did she tag?", options: ["5", "7", "9"], answer: "1" },
+                    { prompt: "What was the purpose of tagging them?", options: ["Medical check", "Track migration patterns", "Population counting"], answer: "1" }
+                ]
+            },
+            {
+                text: "Marcus is an architect who took a special architectural boat tour down the river in Chicago to study skyscrapers. The tour lasted exactly 90 minutes, during which he sketched 4 famous historic buildings in his leather notebook.",
+                questions: [
+                    { prompt: "What is Marcus's profession?", options: ["Engineer", "Architect", "Historian"], answer: "1" },
+                    { prompt: "What city was he taking studying in?", options: ["New York", "Chicago", "Boston"], answer: "1" },
+                    { prompt: "What kind of tour was he on?", options: ["Walking tour", "Helicopter tour", "Boat tour"], answer: "2" },
+                    { prompt: "How long did the tour last?", options: ["60 minutes", "90 minutes", "120 minutes"], answer: "1" },
+                    { prompt: "How many buildings did he sketch?", options: ["3", "4", "5"], answer: "1" }
+                ]
+            },
+            {
+                text: "Natalie flew into the heart of the Amazon rainforest to catalog undiscovered plant species. On the third day of her damp expedition, she stumbled upon a brightly colored purple orchid growing on the side of a massive mahogany tree.",
+                questions: [
+                    { prompt: "Where did Natalie fly to?", options: ["Amazon rainforest", "Congo basin", "Sumatra"], answer: "0" },
+                    { prompt: "What was she trying to catalog?", options: ["Insects", "Tree frogs", "Plant species"], answer: "2" },
+                    { prompt: "What day of the expedition did she find the flower?", options: ["First", "Second", "Third"], answer: "2" },
+                    { prompt: "What color was the orchid?", options: ["Red", "Purple", "Yellow"], answer: "1" },
+                    { prompt: "What kind of tree was it growing on?", options: ["Mahogany", "Oak", "Rubber tree"], answer: "0" }
+                ]
+            },
+            {
+                text: "Ryan, an independent country musician, booked a small studio in Nashville for his debut album. After playing his acoustic guitar for 8 hours straight, his fingers were blistered, but he managed to perfectly record 5 original songs.",
+                questions: [
+                    { prompt: "What genre of music does Ryan play?", options: ["Rock", "Country", "Folk"], answer: "1" },
+                    { prompt: "What city was the studio in?", options: ["Austin", "Nashville", "Memphis"], answer: "1" },
+                    { prompt: "What instrument was he playing?", options: ["Piano", "Electric guitar", "Acoustic guitar"], answer: "2" },
+                    { prompt: "How many hours did he play straight?", options: ["6 hours", "8 hours", "10 hours"], answer: "1" },
+                    { prompt: "How many original songs did he record?", options: ["3", "5", "7"], answer: "1" }
+                ]
+            },
+            {
+                text: "Elena trained for an entire year to qualify for the famous Boston Marathon. The weather was a freezing 40 degrees and raining, but she pushed through the pain and crossed the finish line in an impressive 3 hours and 15 minutes.",
+                questions: [
+                    { prompt: "What marathon was Elena running?", options: ["New York", "Boston", "Chicago"], answer: "1" },
+                    { prompt: "How long did she train to qualify?", options: ["Six months", "One year", "Two years"], answer: "1" },
+                    { prompt: "What was the temperature during the race?", options: ["30 degrees", "40 degrees", "50 degrees"], answer: "1" },
+                    { prompt: "What was the weather like?", options: ["Sunny", "Snowing", "Raining"], answer: "2" },
+                    { prompt: "What was her finishing time?", options: ["3 hours 15 minutes", "3 hours 30 minutes", "3 hours 45 minutes"], answer: "0" }
+                ]
+            },
+            {
+                text: "Victor rented a tiny stone cottage in the countryside of Provence, France to focus on his painting. Over a single peaceful weekend, he used up 12 tubes of blue oil paint trying to capture the vast lavender fields.",
+                questions: [
+                    { prompt: "What country was Victor visiting?", options: ["Italy", "Spain", "France"], answer: "2" },
+                    { prompt: "What region was the cottage in?", options: ["Burgundy", "Provence", "Bordeaux"], answer: "1" },
+                    { prompt: "How many tubes of paint did he use up?", options: ["10", "12", "14"], answer: "1" },
+                    { prompt: "What color paint did he use the most?", options: ["Blue", "Purple", "Green"], answer: "0" },
+                    { prompt: "What was he trying to paint?", options: ["Sunflowers", "Lavender fields", "Vineyards"], answer: "1" }
+                ]
+            },
+            {
+                text: "Harper packed her heavy telescope and drove high up into the Andes mountains of Chile to escape the city light pollution. At exactly 2:00 AM, she was thrilled to spot a rare passing comet with a glowing green tail.",
+                questions: [
+                    { prompt: "What mountain range did Harper drive into?", options: ["Rockies", "Andes", "Alps"], answer: "1" },
+                    { prompt: "What country was she in?", options: ["Argentina", "Chile", "Peru"], answer: "1" },
+                    { prompt: "Why did she go up into the mountains?", options: ["Fresh air", "Escape light pollution", "Higher altitude"], answer: "1" },
+                    { prompt: "What time did she spot the object?", options: ["Midnight", "1:00 AM", "2:00 AM"], answer: "2" },
+                    { prompt: "What color was the comet's tail?", options: ["Blue", "Green", "White"], answer: "1" }
+                ]
+            },
+            {
+                text: "Leo saved up his bartender tips for months to take a dream surfing trip to the volcanic island of Bali. On his first day hitting the water, he successfully caught a massive 10-foot wave right before a heavy tropical storm rolled in.",
+                questions: [
+                    { prompt: "How did Leo save money for his trip?", options: ["Selling his car", "Bartender tips", "Office bonus"], answer: "1" },
+                    { prompt: "What island did he travel to?", options: ["Bali", "Fiji", "Maui"], answer: "0" },
+                    { prompt: "How large was the wave he caught?", options: ["8-foot", "10-foot", "12-foot"], answer: "1" },
+                    { prompt: "When did he catch the wave?", options: ["His first day", "His last day", "The middle of the trip"], answer: "0" },
+                    { prompt: "What weather event happened right after?", options: ["Tsunami", "Tropical storm", "Earthquake"], answer: "1" }
+                ]
+            },
+            {
+                text: "Chloe, a senior software engineer, flew halfway across the world to attend an artificial intelligence conference in Tokyo. During the event, she drank 5 cups of matcha tea and networked with developers from 18 different countries.",
+                questions: [
+                    { prompt: "What is Chloe's job title?", options: ["Data Analyst", "Senior software engineer", "Product Manager"], answer: "1" },
+                    { prompt: "What city was the conference in?", options: ["Seoul", "Tokyo", "Singapore"], answer: "1" },
+                    { prompt: "What was the topic of the conference?", options: ["Cybersecurity", "Blockchain", "Artificial intelligence"], answer: "2" },
+                    { prompt: "How many cups of tea did she drink?", options: ["3", "5", "7"], answer: "1" },
+                    { prompt: "How many different countries were the developers from?", options: ["12", "15", "18"], answer: "2" }
+                ]
             }
         ];
 
@@ -325,7 +445,15 @@ class GameManager {
             { text: "8526 Dogwood Ave, Fargo, ND, USA", options: ["8526 Dogwood Ave, Fargo, SD, USA", "8256 Dogwood Ave, Fargo, ND, USA", "8526 Dogwood Ave, Fargo, ND, USA", "8526 Dogwood Ln, Fargo, ND, USA"], answer: "2" },
             { text: "1407 Poplar Pl, Reno, NV, USA", options: ["1407 Poplar Pl, Reno, NV, USA", "1470 Poplar Pl, Reno, NV, USA", "1407 Popular Pl, Reno, NV, USA", "1407 Poplar Pl, Vegas, NV, USA"], answer: "0" },
             { text: "4753 Alder Xing, Tulsa, OK, USA", options: ["4753 Alder Xing, Tulsa, TX, USA", "4573 Alder Xing, Tulsa, OK, USA", "4753 Aster Xing, Tulsa, OK, USA", "4753 Alder Xing, Tulsa, OK, USA"], answer: "3" },
-            { text: "9618 Hazel Rd, Mesa, AZ, USA", options: ["9618 Hazel Rd, Mesa, NM, USA", "9618 Hazel Rd, Mesa, AZ, USA", "9168 Hazel Rd, Mesa, AZ, USA", "9618 Hazel Ln, Mesa, AZ, USA"], answer: "1" }
+            { text: "9618 Hazel Rd, Mesa, AZ, USA", options: ["9618 Hazel Rd, Mesa, NM, USA", "9618 Hazel Rd, Mesa, AZ, USA", "9168 Hazel Rd, Mesa, AZ, USA", "9618 Hazel Ln, Mesa, AZ, USA"], answer: "1" },
+            { text: "1928 Birch Creek Rd, Richmond, VA, USA", options: ["1928 Birch Creek Rd, Richmond, VA, USA", "1829 Birch Creek Rd, Richmond, VA, USA", "1928 Birch Creek Dr, Richmond, VA, USA", "1928 Birch Creek Rd, Roanoke, VA, USA"], answer: "0" },
+            { text: "5431 Oceanview Ave, Monterey, CA, USA", options: ["5431 Oceanview Ave, Malibu, CA, USA", "5413 Oceanview Ave, Monterey, CA, USA", "5431 Oceanview Ave, Monterey, CA, USA", "5431 Oceanfront Ave, Monterey, CA, USA"], answer: "2" },
+            { text: "8765 Pinewood Ln, Savannah, GA, USA", options: ["8765 Pinewood Ln, Savannah, SC, USA", "8756 Pinewood Ln, Savannah, GA, USA", "8765 Pinehurst Ln, Savannah, GA, USA", "8765 Pinewood Ln, Savannah, GA, USA"], answer: "3" },
+            { text: "2314 Meadow Dr, Madison, AL, USA", options: ["2314 Meadow Way, Madison, AL, USA", "2314 Meadow Dr, Madison, AL, USA", "2134 Meadow Dr, Madison, AL, USA", "2314 Meadow Dr, Mobile, AL, USA"], answer: "1" },
+            { text: "6590 Riverbend Ct, Cincinnati, OH, USA", options: ["6590 Riverbend Ct, Cincinnati, OH, USA", "6509 Riverbend Ct, Cincinnati, OH, USA", "6590 Riverwalk Ct, Cincinnati, OH, USA", "6590 Riverbend Ct, Cleveland, OH, USA"], answer: "0" },
+            { text: "1023 Summit Way, Salt Lake City, UT, USA", options: ["1032 Summit Way, Salt Lake City, UT, USA", "1023 Summer Way, Salt Lake City, UT, USA", "1023 Summit Way, Salt Lake City, UT, USA", "1023 Summit Way, Park City, UT, USA"], answer: "2" },
+            { text: "7845 Valley Forge, Lexington, KY, USA", options: ["7845 Valley Forge, Louisville, KY, USA", "7854 Valley Forge, Lexington, KY, USA", "7845 Valley View, Lexington, KY, USA", "7845 Valley Forge, Lexington, KY, USA"], answer: "3" },
+            { text: "4901 Harbor Blvd, Charleston, SC, USA", options: ["4901 Harbor Blvd, Charleston, NC, USA", "4901 Harbor Blvd, Charleston, SC, USA", "4091 Harbor Blvd, Charleston, SC, USA", "4901 Haven Blvd, Charleston, SC, USA"], answer: "1" }
         ];
 
         // Game-specific variables
@@ -512,6 +640,53 @@ class GameManager {
                 const weeks = Math.floor(Math.random() * 4) + 6; // 6 to 9
                 const text = `You want to buy a laptop that costs $${goal}. You save $${save} every week. After ${weeks} weeks of saving, how much MORE money do you need to reach your goal?`;
                 const answer = goal - (save * weeks);
+                return { text, answer };
+            },
+            // 16. Salary/Taxes
+            () => {
+                const salary = Math.floor(Math.random() * 3 + 4) * 1000; // 4000 to 6000
+                const taxRate = Math.floor(Math.random() * 3) * 5 + 15; // 15, 20, 25
+                const months = Math.floor(Math.random() * 4) + 3; // 3 to 6
+                const text = `You earn a gross salary of $${salary} per month. Exactly ${taxRate}% of your salary is deducted for taxes before you are paid. How much net take-home pay do you receive over the course of ${months} months?`;
+                const answer = (salary * (1 - taxRate / 100)) * months;
+                return { text, answer };
+            },
+            // 17. Baking/Ingredients
+            () => {
+                const baseFlour = Math.floor(Math.random() * 3) + 2; // 2 to 4
+                const baseCookies = Math.floor(Math.random() * 2 + 1) * 12; // 12 or 24
+                const targetCookies = baseCookies * (Math.floor(Math.random() * 3) + 3); // 36, 48, ... target
+                const text = `A recipe requires exactly ${baseFlour} cups of flour to bake a batch of ${baseCookies} master-size cookies. If you are hosting a party and need to bake ${targetCookies} of these cookies, how many cups of flour will you need in total?`;
+                const answer = (targetCookies / baseCookies) * baseFlour;
+                return { text, answer };
+            },
+            // 18. Gym Memberships
+            () => {
+                const joinFee = (Math.floor(Math.random() * 5) + 5) * 10; // 50 to 90
+                const monthly = (Math.floor(Math.random() * 4) + 3) * 10; // 30 to 60
+                const months = Math.floor(Math.random() * 6) + 6; // 6 to 11
+                const text = `A local fitness gym charges a one-time joining fee of $${joinFee} and a flat rate of $${monthly} per month. If you sign a contract and stay a member for ${months} months, how much will you have paid the gym in total?`;
+                const answer = joinFee + (monthly * months);
+                return { text, answer };
+            },
+            // 19. Train Commute
+            () => {
+                const speed = (Math.floor(Math.random() * 4) + 6) * 10; // 60 to 90
+                const hours = Math.floor(Math.random() * 3) + 4; // 4 to 6
+                const rate = Math.floor(Math.random() * 3) + 2; // 2 to 4
+                const text = `An express train travels at a constant speed of ${speed} miles per hour. It takes exactly ${hours} hours to reach its destination. If the railway company charges $${rate} for every single mile traveled, what is the cost of the ticket?`;
+                const answer = (speed * hours) * rate;
+                return { text, answer };
+            },
+            // 20. Gardening
+            () => {
+                const width = Math.floor(Math.random() * 5) + 5; // 5 to 9
+                const length = Math.floor(Math.random() * 5) + 10; // 10 to 14
+                const area = width * length;
+                const coverage = 10;
+                const cost = Math.floor(Math.random() * 10) + 15; // 15 to 24
+                const text = `You are designing a rectangular garden that is ${width} feet wide and ${length} feet long. A bag of premium fertilizer perfectly covers exactly ${coverage} square feet of ground and costs $${cost} per bag. How much will it cost to fertilize the entire garden area?`;
+                const answer = (Math.ceil(area / coverage)) * cost;
                 return { text, answer };
             }
         ];
