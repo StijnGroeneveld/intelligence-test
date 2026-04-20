@@ -847,6 +847,7 @@ class GameManager {
 
             this.currentTestIndex = 0;
             this.state.scores = {};
+            this.state.breakdowns = {};
             this.startGameplay();
         });
 
@@ -861,6 +862,7 @@ class GameManager {
                 this.testSequence = [testId];
                 this.currentTestIndex = 0;
                 this.state.scores = {};
+                this.state.breakdowns = {};
                 this.startGameplay();
             });
         });
@@ -1301,6 +1303,7 @@ class GameManager {
             this.gameData.mathRounds = testId === 'mentalMath' ? 12 : 5;
             this.gameData.mathCurrentRound = 0;
             this.gameData.mathScore = 0;
+            this.gameData.mathWrongAnswers = []; // Track wrong answers
 
             if (testId === 'storyMath') {
                 const tempIndices = Array.from({ length: this.storyMathTemplates.length }, (_, i) => i);
@@ -1513,12 +1516,14 @@ class GameManager {
 
             document.getElementById('math-question').textContent = qText;
             this.gameData.currentMathAnswer = ans;
+            this.gameData.currentMathQuestion = qText;
         } else {
             // Story Math
             const templateIndex = this.gameData.selectedMathTemplates[this.gameData.mathCurrentRound - 1];
             const problem = this.storyMathTemplates[templateIndex]();
             document.getElementById('math-question').textContent = problem.text;
             this.gameData.currentMathAnswer = problem.answer;
+            this.gameData.currentMathQuestion = problem.text;
         }
 
         let timeLeft = isMental ? 20 : 60;
@@ -1541,9 +1546,18 @@ class GameManager {
 
         const inputVal = document.getElementById('math-input').value;
         const parsed = parseInt(inputVal, 10);
+        const isCorrect = !isTimeout && !isNaN(parsed) && parsed === this.gameData.currentMathAnswer;
 
-        if (!isTimeout && !isNaN(parsed) && parsed === this.gameData.currentMathAnswer) {
+        if (isCorrect) {
             this.gameData.mathScore++;
+        } else {
+            // Track wrong answer
+            const userAnswerStr = isTimeout ? '(no answer)' : (inputVal.trim() === '' ? '(no answer)' : inputVal.trim());
+            this.gameData.mathWrongAnswers.push({
+                question: this.gameData.currentMathQuestion,
+                yourAnswer: userAnswerStr,
+                correctAnswer: this.gameData.currentMathAnswer
+            });
         }
 
         if (this.gameData.mathCurrentRound < this.gameData.mathRounds) {
@@ -1555,15 +1569,45 @@ class GameManager {
             if (!this.state.scores[testId]) this.state.scores[testId] = [];
             this.state.scores[testId].push(`${finalScore} Points`);
 
+            // Build wrong answers HTML
+            const wrongAnswersHTML = this.generateMathWrongAnswersHTML(this.gameData.mathWrongAnswers);
+
             if (!this.state.breakdowns[testId]) this.state.breakdowns[testId] = [];
-            this.state.breakdowns[testId].push(`${this.gameData.mathScore}/${this.gameData.mathRounds} Correct`);
+            this.state.breakdowns[testId].push({
+                summary: `${this.gameData.mathScore}/${this.gameData.mathRounds} Correct`,
+                wrongAnswersHTML
+            });
 
             const scoreDisplay = document.getElementById('round-score');
-            scoreDisplay.innerHTML = `Score: <br><span style="color: var(--accent-color); font-size: 3rem;">${this.gameData.mathScore}/${this.gameData.mathRounds}</span><br><span style="font-size: 1.2rem;">Correct Answers</span>`;
+            let html = `Score: <br><span style="color: var(--accent-color); font-size: 3rem;">${this.gameData.mathScore}/${this.gameData.mathRounds}</span><br><span style="font-size: 1.2rem;">Correct Answers</span>`;
+            if (wrongAnswersHTML) {
+                html += wrongAnswersHTML;
+            }
+            scoreDisplay.innerHTML = html;
             scoreDisplay.style.color = "var(--text-color)";
 
             this.proceedAfterTest();
         }
+    }
+
+    generateMathWrongAnswersHTML(wrongAnswers) {
+        if (!wrongAnswers || wrongAnswers.length === 0) return '';
+        let html = `<div style="margin-top: 1.5rem; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">`;
+        html += `<h4 style="text-align: center; margin-bottom: 0.75rem; color: #cc3333;">❌ Incorrect Answers (${wrongAnswers.length})</h4>`;
+        html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;"><thead><tr>`;
+        html += `<th style="border: 1px solid var(--border-color); padding: 8px; background: #222; text-align: left;">Question</th>`;
+        html += `<th style="border: 1px solid var(--border-color); padding: 8px; background: #222; text-align: center;">Your Answer</th>`;
+        html += `<th style="border: 1px solid var(--border-color); padding: 8px; background: #222; text-align: center; color: var(--accent-color);">Correct Answer</th>`;
+        html += `</tr></thead><tbody>`;
+        wrongAnswers.forEach(w => {
+            html += `<tr>`;
+            html += `<td style="border: 1px solid var(--border-color); padding: 8px; background: var(--surface-color);">${w.question}</td>`;
+            html += `<td style="border: 1px solid var(--border-color); padding: 8px; background: var(--surface-color); text-align: center; color: #cc3333;">${w.yourAnswer}</td>`;
+            html += `<td style="border: 1px solid var(--border-color); padding: 8px; background: var(--surface-color); text-align: center; color: var(--accent-color);">${w.correctAnswer}</td>`;
+            html += `</tr>`;
+        });
+        html += `</tbody></table></div>`;
+        return html;
     }
 
     // --- Story Memory Methods ---
@@ -2525,20 +2569,28 @@ class GameManager {
             if (!breakdownsData || breakdownsData.length === 0) return '';
             const arr = Array.isArray(breakdownsData) ? breakdownsData : [breakdownsData];
             let res = `<h3 style="margin-top: 3rem; text-align: center; color: var(--text-color);">${title}</h3>`;
-            res += `<div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">`;
-            arr.forEach((htmlBlock, i) => {
-                res += `<div style="flex: 1; min-width: 250px; max-width: 400px; background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">`;
-                if (arr.length > 1) res += `<h4 style="margin-top: 0; text-align: center; color: var(--accent-color);">Round ${i + 1}</h4>`;
-                res += htmlBlock;
-                res += `</div>`;
+            arr.forEach((block, i) => {
+                if (arr.length > 1) res += `<h4 style="text-align: center; color: var(--accent-color); margin-top: 1.5rem;">Round ${i + 1}</h4>`;
+                if (typeof block === 'object' && block.summary !== undefined) {
+                    // Math breakdown object
+                    res += `<div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem;">`;
+                    res += `<div style="text-align: center; font-weight: bold; margin-bottom: 0.5rem;">${block.summary}</div>`;
+                    if (block.wrongAnswersHTML) res += block.wrongAnswersHTML;
+                    res += `</div>`;
+                } else {
+                    res += `<div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem;">`;
+                    res += block;
+                    res += `</div>`;
+                }
             });
-            res += `</div>`;
             return res;
         };
 
         if (this.state.breakdowns) {
             html += renderResultsBreakdown('Sequential Numbers Breakdown', this.state.breakdowns['sequentialNumberMemory']);
             html += renderResultsBreakdown('Reverse Numbers Breakdown', this.state.breakdowns['reverseSequentialNumberMemory']);
+            html += renderResultsBreakdown('Mental Math — Wrong Answers', this.state.breakdowns['mentalMath']);
+            html += renderResultsBreakdown('Story Math — Wrong Answers', this.state.breakdowns['storyMath']);
         }
 
         summaryDiv.innerHTML = html;
@@ -2855,19 +2907,26 @@ class GameManager {
                 if (!breakdownsData || breakdownsData.length === 0) return '';
                 const arr = Array.isArray(breakdownsData) ? breakdownsData : [breakdownsData];
                 let res = `<h4 style="margin-top: 2rem; text-align: center; color: var(--text-color);">${title}</h4>`;
-                res += `<div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">`;
-                arr.forEach((htmlBlock, i) => {
-                    res += `<div style="flex: 1; min-width: 250px; max-width: 400px; background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">`;
-                    if (arr.length > 1) res += `<h5 style="margin-top: 0; text-align: center; color: var(--accent-color);">Round ${i + 1}</h5>`;
-                    res += htmlBlock;
-                    res += `</div>`;
+                arr.forEach((block, i) => {
+                    if (arr.length > 1) res += `<h5 style="text-align: center; color: var(--accent-color); margin-top: 1rem;">Round ${i + 1}</h5>`;
+                    if (typeof block === 'object' && block.summary !== undefined) {
+                        res += `<div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1rem;">`;
+                        res += `<div style="text-align: center; font-weight: bold; margin-bottom: 0.5rem;">${block.summary}</div>`;
+                        if (block.wrongAnswersHTML) res += block.wrongAnswersHTML;
+                        res += `</div>`;
+                    } else {
+                        res += `<div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1rem;">`;
+                        res += block;
+                        res += `</div>`;
+                    }
                 });
-                res += `</div>`;
                 return res;
             };
 
             html += renderHistoryBreakdown('Sequential Numbers Breakdown', run.rawBreakdowns['sequentialNumberMemory']);
             html += renderHistoryBreakdown('Reverse Numbers Breakdown', run.rawBreakdowns['reverseSequentialNumberMemory']);
+            html += renderHistoryBreakdown('Mental Math — Wrong Answers', run.rawBreakdowns['mentalMath']);
+            html += renderHistoryBreakdown('Story Math — Wrong Answers', run.rawBreakdowns['storyMath']);
         }
 
         detailContainer.innerHTML = html;
