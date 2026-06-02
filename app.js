@@ -68,11 +68,6 @@ class GameManager {
         this.nextTestBtn = document.getElementById('next-test-btn');
         this.historyContainer = document.getElementById('history-container');
         this.historyDetailContainer = document.getElementById('history-detail-container');
-        this.settingsModal = document.getElementById('settings-modal');
-        this.toggleSound = document.getElementById('toggle-sound');
-        this.toggleTheme = document.getElementById('toggle-theme');
-        this.settingsBtn = document.getElementById('settings-btn');
-        this.closeSettingsBtn = document.getElementById('close-settings-btn');
         this.viewHistoryBtn = document.getElementById('view-history-btn');
         this.closeHistoryBtn = document.getElementById('close-history-btn');
         this.startFullBtn = document.getElementById('start-full-btn');
@@ -116,10 +111,9 @@ class GameManager {
             breakdowns: {}
         };
 
-        // Load Settings and History from localStorage
-        const savedSettings = JSON.parse(this.getStorageItem('cognitiveTestSettings'));
-        this.settings = savedSettings || { soundEnabled: true, darkMode: true };
-        this.applyTheme(this.settings.darkMode);
+        // Default settings (sound enabled, dark mode active)
+        this.settings = { soundEnabled: true, darkMode: true };
+        this.applyTheme(true);
 
         this.testInfo = {
             storyMemoryReading: {
@@ -310,36 +304,7 @@ class GameManager {
     }
 
     bindEvents() {
-        // --- Settings & History Menus ---
-        if (this.settingsBtn) {
-            this.settingsBtn.addEventListener('click', () => {
-                const modal = this.settingsModal;
-                if (modal) modal.style.display = 'flex';
-                if (this.toggleSound) this.toggleSound.checked = this.settings.soundEnabled;
-                if (this.toggleTheme) this.toggleTheme.checked = this.settings.darkMode;
-            });
-        }
-
-        if (this.closeSettingsBtn) {
-            this.closeSettingsBtn.addEventListener('click', () => {
-                if (this.settingsModal) this.settingsModal.style.display = 'none';
-            });
-        }
-
-        if (this.toggleSound) {
-            this.toggleSound.addEventListener('change', (e) => {
-                this.settings.soundEnabled = e.target.checked;
-                this.saveSettings();
-            });
-        }
-
-        if (this.toggleTheme) {
-            this.toggleTheme.addEventListener('change', (e) => {
-                this.settings.darkMode = e.target.checked;
-                this.applyTheme(this.settings.darkMode);
-                this.saveSettings();
-            });
-        }
+        // --- History Menu ---
 
         if (this.viewHistoryBtn) {
             this.viewHistoryBtn.addEventListener('click', () => {
@@ -2295,9 +2260,6 @@ class GameManager {
         }
     }
 
-    saveSettings() {
-        this.setStorageItem('cognitiveTestSettings', JSON.stringify(this.settings));
-    }
 
     applyTheme(isDark) {
         if (isDark) {
