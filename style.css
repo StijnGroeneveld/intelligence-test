@@ -742,3 +742,60 @@ input:checked+.slider:before {
         padding-bottom: 35vh;
     }
 }
+
+/* Clock Reading Minigame Styles */
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .options-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.clock-option-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-color);
+    padding: 14px 20px;
+    font-size: 1.25rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    text-transform: none;
+    letter-spacing: 1px;
+    width: 100%;
+    outline: none;
+    backdrop-filter: blur(10px);
+}
+
+.clock-option-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--accent-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.05);
+}
+
+.clock-option-btn:active {
+    transform: translateY(0);
+}
+
+.clock-option-btn.correct-choice {
+    background-color: rgba(76, 175, 80, 0.2) !important;
+    border-color: #4CAF50 !important;
+    color: #4CAF50 !important;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.4);
+}
+
+.clock-option-btn.wrong-choice {
+    background-color: rgba(244, 67, 54, 0.2) !important;
+    border-color: #F44336 !important;
+    color: #F44336 !important;
+    box-shadow: 0 0 10px rgba(244, 67, 54, 0.4);
+}

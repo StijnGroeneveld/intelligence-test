@@ -3,8 +3,93 @@ class GameManager {
         return window.matchMedia('(hover: none) and (pointer: coarse)').matches;
     }
 
-    constructor() {
+    getStorageItem(key) {
+        try {
+            return localStorage.getItem(key);
+        } catch (e) {
+            console.warn(`localStorage read failed for key "${key}":`, e);
+            return this.storageFallback ? (this.storageFallback[key] || null) : null;
+        }
+    }
+
+    setStorageItem(key, value) {
+        try {
+            localStorage.setItem(key, value);
+        } catch (e) {
+            console.warn(`localStorage write failed for key "${key}":`, e);
+        }
+        if (this.storageFallback) {
+            this.storageFallback[key] = value;
+        }
+    }
+
+    cacheElements() {
         this.appContainer = document.getElementById('app');
+        this.progressBar = document.getElementById('progress-bar');
+        this.progressInfo = document.getElementById('progress-info');
+        this.progressContainer = document.getElementById('progress-container');
+        this.clockTimerText = document.getElementById('clock-timer-text');
+        this.clockTimerBar = document.getElementById('clock-timer-bar');
+        this.clockOptionsContainer = document.getElementById('clock-options-container');
+        this.clockPrompt = document.getElementById('clock-prompt');
+        this.clockProgressInfo = document.getElementById('clock-progress-info');
+        this.clockCanvas = document.getElementById('clock-canvas');
+        this.mathQuestion = document.getElementById('math-question');
+        this.mathTimer = document.getElementById('math-timer');
+        this.mathInput = document.getElementById('math-input');
+        this.mathProgress = document.getElementById('math-progress');
+        this.submitMathBtn = document.getElementById('submit-math-btn');
+        this.numberPrompt = document.getElementById('number-prompt');
+        this.numberDisplay = document.getElementById('number-display');
+        this.numberInputContainer = document.getElementById('number-input-container');
+        this.numberInput = document.getElementById('number-input');
+        this.submitNumberBtn = document.getElementById('submit-number-btn');
+        this.memoryGrid = document.getElementById('memory-grid');
+        this.submitGridBtn = document.getElementById('submit-grid-btn');
+        this.storyText = document.getElementById('story-text');
+        this.storyTimer = document.getElementById('story-timer');
+        this.dynamicQuestionsContainer = document.getElementById('dynamic-questions-container');
+        this.submitStoryBtn = document.getElementById('submit-story-btn');
+        this.addressTimer = document.getElementById('address-timer');
+        this.addressTextContainer = document.getElementById('address-text-container');
+        this.addressOptionsContainer = document.getElementById('address-options-container');
+        this.submitAddressBtn = document.getElementById('submit-address-btn');
+        this.nbackLetterDisplay = document.getElementById('nback-letter-display');
+        this.nbackFeedback = document.getElementById('nback-feedback');
+        this.nbackTouchZone = document.getElementById('nback-touch-zone');
+        this.reactionTouchZone = document.getElementById('reaction-touch-zone');
+        this.minigamePrompt = document.getElementById('minigame-prompt');
+        this.flankerFeedback = document.getElementById('flanker-feedback');
+        this.flankerArrows = document.getElementById('flanker-arrows');
+        this.flankerTouchLeft = document.getElementById('flanker-touch-left');
+        this.flankerTouchRight = document.getElementById('flanker-touch-right');
+        this.roundScore = document.getElementById('round-score');
+        this.resultsTitle = document.getElementById('results-title');
+        this.nextTestBtn = document.getElementById('next-test-btn');
+        this.historyContainer = document.getElementById('history-container');
+        this.historyDetailContainer = document.getElementById('history-detail-container');
+        this.settingsModal = document.getElementById('settings-modal');
+        this.toggleSound = document.getElementById('toggle-sound');
+        this.toggleTheme = document.getElementById('toggle-theme');
+        this.settingsBtn = document.getElementById('settings-btn');
+        this.closeSettingsBtn = document.getElementById('close-settings-btn');
+        this.viewHistoryBtn = document.getElementById('view-history-btn');
+        this.closeHistoryBtn = document.getElementById('close-history-btn');
+        this.startFullBtn = document.getElementById('start-full-btn');
+        this.durationSelect = document.getElementById('duration-select');
+        this.showIndividualBtn = document.getElementById('show-individual-btn');
+        this.beginTestBtn = document.getElementById('begin-test-btn');
+        this.restartBtn = document.getElementById('restart-btn');
+        this.roundCompleteBtn = document.getElementById('round-complete-btn');
+        this.roundCompleteText = document.getElementById('round-complete-text');
+        this.finalSummary = document.getElementById('final-summary');
+        this.instTitle = document.getElementById('inst-title');
+        this.instDesc = document.getElementById('inst-desc');
+    }
+
+    constructor() {
+        this.storageFallback = {};
+        this.cacheElements();
 
         // Full sequence: Tests 1-9
         this.testSequence = [
@@ -21,6 +106,7 @@ class GameManager {
             'chimpTest',
             'mentalMath',
             'storyMath',
+            'clockReading',
             'storyMemoryQuestions'
         ];
         this.currentTestIndex = 0;
@@ -31,7 +117,7 @@ class GameManager {
         };
 
         // Load Settings and History from localStorage
-        const savedSettings = JSON.parse(localStorage.getItem('cognitiveTestSettings'));
+        const savedSettings = JSON.parse(this.getStorageItem('cognitiveTestSettings'));
         this.settings = savedSettings || { soundEnabled: true, darkMode: true };
         this.applyTheme(this.settings.darkMode);
 
@@ -74,7 +160,7 @@ class GameManager {
             },
             nBackTask: {
                 title: "N-Back Task (2-Back)",
-                desc: `A sequence of 25 letters will appear one by one.<br><br>${this.isTouchDevice() ? '<strong>Tap the screen</strong>' : 'Press the <strong>Spacebar</strong>'} ONLY if the current letter matches the letter you saw <strong>2 steps ago</strong> (e.g., A -> B -> A).<br><br>Do not ${this.isTouchDevice() ? 'tap' : 'press anything'} if it does not match.`
+                desc: `A sequence of 25 letters will appear one by one.<br><br>${this.isTouchDevice() ? '<strong>Tap the screen</strong>' : 'press the <strong>Spacebar</strong>'} ONLY if the current letter matches the letter you saw <strong>2 steps ago</strong> (e.g., A -> B -> A).<br><br>Do not ${this.isTouchDevice() ? 'tap' : 'press anything'} if it does not match.`
             },
             storyMemoryQuestions: {
                 title: "Story Memory Recall",
@@ -99,362 +185,52 @@ class GameManager {
             storyMath: {
                 title: "Story Math",
                 desc: "Solve 5 math word problems. You have <strong>60 seconds</strong> per question. Press Enter to submit."
+            },
+            clockReading: {
+                title: "Clock Reading",
+                desc: "An analog clock will be shown. Select the correct time from the multiple-choice options underneath as fast as possible.<br><br>There are 10 rounds of max 10 seconds. 5 rounds will show hour indicator lines, and 5 rounds will show no indicators. Keyboard keys <strong>1</strong>, <strong>2</strong>, <strong>3</strong>, and <strong>4</strong> can be used as shortcuts."
+            },
+            story1Reading: {
+                title: "Story 1 Memory (Reading)",
+                desc: "Read the following short story carefully. You will be tested on the details later. You have 30 seconds."
+            },
+            story2Reading: {
+                title: "Story 2 Memory (Reading)",
+                desc: "Read the following short story carefully. You will be tested on the details later. You have 30 seconds."
+            },
+            story3Reading: {
+                title: "Story 3 Memory (Reading)",
+                desc: "Read the following short story carefully. You will be tested on the details later. You have 30 seconds."
+            },
+            story1Recall1: {
+                title: "Story 1 Recall (Phase 1)",
+                desc: "Answer the question about the first story you read."
+            },
+            story1Recall2: {
+                title: "Story 1 Recall (Phase 2)",
+                desc: "Answer the next question about the first story you read."
+            },
+            story1Recall3: {
+                title: "Story 1 Recall (Phase 3)",
+                desc: "Answer the final question about the first story you read."
+            },
+            story2Recall1: {
+                title: "Story 2 Recall (Phase 1)",
+                desc: "Answer the question about the second story you read."
+            },
+            story2Recall2: {
+                title: "Story 2 Recall (Phase 2)",
+                desc: "Answer the next question about the second story you read."
+            },
+            story3Recall1: {
+                title: "Story 3 Recall",
+                desc: "Answer the question about the third story you read."
             }
         };
 
-        this.stories = [
-            {
-                text: "On a rainy Tuesday afternoon, Jordan drove all the way to Missouri to visit a local farmer's market. He was determined to find the best ingredients for his famous pie and ended up buying exactly 4 bright red apples from a vendor named Sarah.",
-                questions: [
-                    { prompt: "What state did Jordan visit?", options: ["Mississippi", "Missouri", "Montana"], answer: "1" },
-                    { prompt: "How many apples were purchased?", options: ["3", "4", "5"], answer: "1" },
-                    { prompt: "What was the vendor's name?", options: ["Sarah", "Megan", "Emily"], answer: "0" },
-                    { prompt: "What day of the week was it?", options: ["Monday", "Tuesday", "Wednesday"], answer: "1" },
-                    { prompt: "What was the weather like?", options: ["Sunny", "Rainy", "Cloudy"], answer: "1" }
-                ]
-            },
-            {
-                text: "Early Saturday morning, Emily took a train down to sunny Florida for a weekend getaway. While walking along the boardwalk, she stopped at a small souvenir shop and purchased 7 colorful postcards to send to her friends back home.",
-                questions: [
-                    { prompt: "What state did Emily visit?", options: ["Florida", "Georgia", "California"], answer: "0" },
-                    { prompt: "How many postcards did she purchase?", options: ["5", "7", "9"], answer: "1" },
-                    { prompt: "How did Emily travel to her destination?", options: ["Bus", "Train", "Plane"], answer: "1" },
-                    { prompt: "Where did she stop to buy souvenirs?", options: ["Boardwalk", "Main Street", "Train Station"], answer: "0" },
-                    { prompt: "What time of day did she leave?", options: ["Early morning", "Late afternoon", "Midnight"], answer: "0" }
-                ]
-            },
-            {
-                text: "During his winter vacation in Colorado, Michael decided to try snowboarding for the very first time. After a long day on the slopes, he went into the lodge and ordered 3 large cups of hot cocoa to share with his family.",
-                questions: [
-                    { prompt: "What state was Michael visiting?", options: ["Utah", "Colorado", "Wyoming"], answer: "1" },
-                    { prompt: "How many cups of hot cocoa did he order?", options: ["2", "3", "4"], answer: "1" },
-                    { prompt: "What sport did Michael try for the first time?", options: ["Skiing", "Snowboarding", "Ice Skating"], answer: "1" },
-                    { prompt: "Who did he share his drinks with?", options: ["Friends", "Colleagues", "Family"], answer: "2" },
-                    { prompt: "What season was it?", options: ["Autumn", "Winter", "Spring"], answer: "1" }
-                ]
-            },
-            {
-                text: "In the middle of July, Samantha flew out to California to attend a prestigious tech conference. Before the event started, she visited a local café and bought 2 iced coffees, one for herself and one for her colleague.",
-                questions: [
-                    { prompt: "What state did Samantha fly to?", options: ["Washington", "California", "Texas"], answer: "1" },
-                    { prompt: "How many iced coffees did she buy?", options: ["1", "2", "3"], answer: "1" },
-                    { prompt: "What kind of event was Samantha attending?", options: ["Music festival", "Tech conference", "Art exhibition"], answer: "1" },
-                    { prompt: "What month was it?", options: ["June", "July", "August"], answer: "1" },
-                    { prompt: "Who was the second coffee for?", options: ["Her sister", "Her boss", "Her colleague"], answer: "2" }
-                ]
-            },
-            {
-                text: "David went on a road trip across Texas to document historic landmarks for his photography portfolio. In the small town of Marfa, he purchased 5 vintage road signs from an antique dealer.",
-                questions: [
-                    { prompt: "What state was David traveling across?", options: ["Texas", "New Mexico", "Arizona"], answer: "0" },
-                    { prompt: "How many vintage road signs did he purchase?", options: ["4", "5", "6"], answer: "1" },
-                    { prompt: "What was David documenting?", options: ["Local wildlife", "Historic landmarks", "Modern architecture"], answer: "1" },
-                    { prompt: "In what town did he buy the signs?", options: ["Austin", "Marfa", "El Paso"], answer: "1" },
-                    { prompt: "Who did he buy the signs from?", options: ["Garage sale", "Street artist", "Antique dealer"], answer: "2" }
-                ]
-            },
-            {
-                text: "Last autumn, Olivia traveled to Vermont to see the changing leaves. While exploring a quaint village, she stopped at a maple syrup farm and bought 6 glass bottles of pure organic syrup as gifts.",
-                questions: [
-                    { prompt: "What state did Olivia travel to?", options: ["Maine", "New Hampshire", "Vermont"], answer: "2" },
-                    { prompt: "How many bottles of syrup did she buy?", options: ["4", "6", "8"], answer: "1" },
-                    { prompt: "What was Olivia looking at?", options: ["Snowy peaks", "Changing leaves", "Wildflowers"], answer: "1" },
-                    { prompt: "Where did she stop to buy the syrup?", options: ["General store", "Maple syrup farm", "Airport gift shop"], answer: "1" },
-                    { prompt: "What kind of syrup was it?", options: ["Artificial", "Pure organic", "Flavored"], answer: "1" }
-                ]
-            },
-            {
-                text: "James moved to noisy New York early last year to pursue his dream of becoming an actor. After his first successful audition, he celebrated by buying 9 hot dogs from a famous street vendor in Times Square.",
-                questions: [
-                    { prompt: "What state does James live in?", options: ["New York", "New Jersey", "Pennsylvania"], answer: "0" },
-                    { prompt: "How many hot dogs did he buy?", options: ["7", "8", "9"], answer: "2" },
-                    { prompt: "What is James's dream career?", options: ["Musician", "Actor", "Director"], answer: "1" },
-                    { prompt: "Where was the hot dog vendor located?", options: ["Central Park", "Brooklyn Bridge", "Times Square"], answer: "2" },
-                    { prompt: "What was he celebrating?", options: ["His birthday", "A new apartment", "A successful audition"], answer: "2" }
-                ]
-            },
-            {
-                text: "While visiting her grandparents in Arizona, Chloe decided to hike the Grand Canyon at sunrise. On her way out of the national park, she stopped at the visitor center and collected 8 different scenic stamps.",
-                questions: [
-                    { prompt: "What state was Chloe visiting?", options: ["Nevada", "Arizona", "Utah"], answer: "1" },
-                    { prompt: "How many scenic stamps did she collect?", options: ["6", "8", "10"], answer: "1" },
-                    { prompt: "Who was Chloe visiting?", options: ["Her parents", "Her grandparents", "Her cousins"], answer: "1" },
-                    { prompt: "What time of day did she hike?", options: ["Sunrise", "Noon", "Sunset"], answer: "0" },
-                    { prompt: "Where did she collect the stamps?", options: ["Trailhead", "Hotel lobby", "Visitor center"], answer: "2" }
-                ]
-            },
-            {
-                text: "Last spring, Benjamin drove his camper van up to Washington state to explore the dense forests. At a roadside diner near Seattle, he was famously known to have eaten 11 blueberry pancakes in one sitting.",
-                questions: [
-                    { prompt: "What state did Benjamin drive to?", options: ["Oregon", "Washington", "Idaho"], answer: "1" },
-                    { prompt: "How many blueberry pancakes did he eat?", options: ["9", "11", "13"], answer: "1" },
-                    { prompt: "What kind of vehicle was he driving?", options: ["Camper van", "Pickup truck", "Convertible"], answer: "0" },
-                    { prompt: "What city was the diner near?", options: ["Portland", "Seattle", "Tacoma"], answer: "1" },
-                    { prompt: "What was he exploring?", options: ["Coastal beaches", "Mountain ranges", "Dense forests"], answer: "2" }
-                ]
-            },
-            {
-                text: "Isabella took a month off to travel through beautiful Hawaii. At a traditional luau in Honolulu, she bought 14 lei necklaces to hand out to everyone in her tour group.",
-                questions: [
-                    { prompt: "What state was Isabella traveling through?", options: ["Hawaii", "Florida", "California"], answer: "0" },
-                    { prompt: "How many lei necklaces did she buy?", options: ["10", "12", "14"], answer: "2" },
-                    { prompt: "What city was the luau in?", options: ["Hilo", "Honolulu", "Kailua"], answer: "1" },
-                    { prompt: "Who were the necklaces for?", options: ["Her family", "Her tour group", "Random strangers"], answer: "1" },
-                    { prompt: "How long was her trip?", options: ["A week", "A month", "Two months"], answer: "1" }
-                ]
-            },
-            {
-                text: "Lucas attended a massive music festival down in Tennessee during a historic heat wave. Trying to stay cool, he purchased exactly 12 bottles of water over the course of the three-day event.",
-                questions: [
-                    { prompt: "What state was the music festival in?", options: ["Kentucky", "Tennessee", "Mississippi"], answer: "1" },
-                    { prompt: "How many bottles of water did Lucas purchase?", options: ["10", "12", "14"], answer: "1" },
-                    { prompt: "What was the weather like during the festival?", options: ["Heavy rain", "Strong winds", "Heat wave"], answer: "2" },
-                    { prompt: "How long was the event?", options: ["Two days", "Three days", "Four days"], answer: "1" },
-                    { prompt: "What was Lucas trying to do by buying water?", options: ["Keep hydrated", "Stay cool", "Save money"], answer: "1" }
-                ]
-            },
-            {
-                text: "Every year, Sophia drives up to Maine for the annual seafood festival. This year, she outdid herself by ordering and individually eating 15 steamed lobsters over the course of the week.",
-                questions: [
-                    { prompt: "What state does Sophia drive to?", options: ["Massachusetts", "Maine", "Rhode Island"], answer: "1" },
-                    { prompt: "How many lobsters did she eat?", options: ["12", "15", "18"], answer: "1" },
-                    { prompt: "What kind of festival was it?", options: ["Agriculture festival", "Music festival", "Seafood festival"], answer: "2" },
-                    { prompt: "How often does Sophia go there?", options: ["Every year", "Every two years", "Only once"], answer: "0" },
-                    { prompt: "How were the lobsters prepared?", options: ["Grilled", "Steamed", "Fried"], answer: "1" }
-                ]
-            },
-            {
-                text: "William was sent on a quick business trip to bustling Illinois for a major corporate merger. During a long delay at O'Hare Airport, he grabbed exactly 10 chocolate chip cookies from a bakery to keep his team happy.",
-                questions: [
-                    { prompt: "What state was William sent to?", options: ["Illinois", "Indiana", "Ohio"], answer: "0" },
-                    { prompt: "How many cookies did he grab?", options: ["8", "10", "12"], answer: "1" },
-                    { prompt: "What was the reason for his trip?", options: ["Vacation", "Acting audition", "Corporate merger"], answer: "2" },
-                    { prompt: "Where did he buy the cookies?", options: ["Train station", "O'Hare Airport", "Downtown bakery"], answer: "1" },
-                    { prompt: "What flavor were the cookies?", options: ["Oatmeal raisin", "Sugar", "Chocolate chip"], answer: "2" }
-                ]
-            },
-            {
-                text: "To celebrate his graduation, Ethan took a solo backpacking trip across rugged Montana. At a local outfitter shop in Bozeman, he realized he was underprepared and bought 13 pairs of thick woolen socks.",
-                questions: [
-                    { prompt: "What state did Ethan backpack across?", options: ["Wyoming", "Montana", "Colorado"], answer: "1" },
-                    { prompt: "How many pairs of socks did he buy?", options: ["11", "13", "15"], answer: "1" },
-                    { prompt: "What was Ethan celebrating?", options: ["New job", "Graduation", "Birthday"], answer: "1" },
-                    { prompt: "In what city was the outfitter shop?", options: ["Bozeman", "Missoula", "Helena"], answer: "0" },
-                    { prompt: "What kind of socks were they?", options: ["Cotton", "Synthetic", "Woolen"], answer: "2" }
-                ]
-            },
-            {
-                text: "For her honeymoon, Mia arranged a romantic getaway to an isolated cabin in peaceful Oregon. While foraging in the woods nearby, she surprisingly managed to find exactly 16 rare wild mushrooms.",
-                questions: [
-                    { prompt: "What state was Mia visiting?", options: ["Washington", "Oregon", "California"], answer: "1" },
-                    { prompt: "How many wild mushrooms did she find?", options: ["14", "16", "18"], answer: "1" },
-                    { prompt: "What was the occasion for Mia's trip?", options: ["Birthday", "Honeymoon", "Promotion"], answer: "1" },
-                    { prompt: "Where was Mia staying?", options: ["Luxury hotel", "Isolated cabin", "Campsite"], answer: "1" },
-                    { prompt: "What was Mia doing when she found the mushrooms?", options: ["Hiking", "Fishing", "Foraging"], answer: "2" }
-                ]
-            },
-            {
-                text: "On a sunny Thursday morning, Noah drove through New Mexico to explore ancient cliff dwellings. He was fascinated by the local craftsmanship and ended up buying 3 pieces of handcrafted pottery from an artist named Diego.",
-                questions: [
-                    { prompt: "What state did Noah drive through?", options: ["Arizona", "New Mexico", "Texas"], answer: "1" },
-                    { prompt: "How many pieces of pottery did he buy?", options: ["2", "3", "5"], answer: "1" },
-                    { prompt: "What was the artist's name?", options: ["Diego", "Carlos", "Mateo"], answer: "0" },
-                    { prompt: "What was Noah exploring?", options: ["Canyons", "Forests", "Ancient cliff dwellings"], answer: "2" },
-                    { prompt: "What day of the week was it?", options: ["Tuesday", "Thursday", "Saturday"], answer: "1" }
-                ]
-            },
-            {
-                text: "On a hot July afternoon, Ava visited a fruit orchard in Georgia to experience the local harvest. She spent hours wandering the trees and eventually picked 18 ripe peaches to make some fresh jam.",
-                questions: [
-                    { prompt: "What state did Ava visit?", options: ["Alabama", "Georgia", "South Carolina"], answer: "1" },
-                    { prompt: "How many peaches did she pick?", options: ["15", "18", "20"], answer: "1" },
-                    { prompt: "What month was it?", options: ["June", "July", "August"], answer: "1" },
-                    { prompt: "What did she want to make with the fruit?", options: ["Pie", "Smoothies", "Fresh jam"], answer: "2" },
-                    { prompt: "What was the weather like?", options: ["Cold", "Cool", "Hot"], answer: "2" }
-                ]
-            },
-            {
-                text: "During his weekend in Nevada, Liam spent some time at a vintage shop in Las Vegas. While browsing through historical items, he found exactly 20 heavy poker chips from an old closed casino.",
-                questions: [
-                    { prompt: "What state was Liam in?", options: ["Nevada", "California", "Arizona"], answer: "0" },
-                    { prompt: "How many poker chips did he find?", options: ["10", "15", "20"], answer: "2" },
-                    { prompt: "What city was he in?", options: ["Reno", "Las Vegas", "Carson City"], answer: "1" },
-                    { prompt: "Where did he find the items?", options: ["Casino floor", "Vintage shop", "Pawn shop"], answer: "1" },
-                    { prompt: "What kind of casino were the chips from?", options: ["New resort", "Old closed casino", "Underground club"], answer: "1" }
-                ]
-            },
-            {
-                text: "While on an expedition in Alaska, Charlotte stopped at a small supply store to pick up some last-minute gear. She was preparing for a day of wildlife spotting and purchased 2 pairs of professional binoculars for whale watching.",
-                questions: [
-                    { prompt: "What state was Charlotte in?", options: ["Alaska", "Washington", "Oregon"], answer: "0" },
-                    { prompt: "How many pairs of binoculars did she buy?", options: ["1", "2", "3"], answer: "1" },
-                    { prompt: "What was Charlotte doing in the state?", options: ["Fishing trip", "Expedition", "Skiing vacation"], answer: "1" },
-                    { prompt: "What was she planning to go watch?", options: ["Bears", "Eagles", "Whales"], answer: "2" },
-                    { prompt: "Where did she buy her gear?", options: ["Department store", "Small supply store", "Online"], answer: "1" }
-                ]
-            },
-            {
-                text: "Early one Sunday, Henry walked through the French Quarter in Louisiana to enjoy the local atmosphere. He followed the smell of sugar and ordered 6 warm beignets from a famous cafe to share with his friends.",
-                questions: [
-                    { prompt: "What state was Henry in?", options: ["Mississippi", "Louisiana", "Alabama"], answer: "1" },
-                    { prompt: "How many beignets did he order?", options: ["3", "6", "9"], answer: "1" },
-                    { prompt: "What area was Henry walking through?", options: ["Garden District", "French Quarter", "Riverwalk"], answer: "1" },
-                    { prompt: "What day of the week was it?", options: ["Friday", "Saturday", "Sunday"], answer: "2" },
-                    { prompt: "Who were the treats for?", options: ["Himself only", "His family", "His friends"], answer: "2" }
-                ]
-            },
-            {
-                text: "David traveled to Iceland in the middle of winter to photograph the Northern Lights. Despite the freezing temperatures, he drove his rented jeep 4 hours outside of Reykjavik and finally captured a perfect shot using a 30-second exposure.",
-                questions: [
-                    { prompt: "What country did David travel to?", options: ["Norway", "Iceland", "Greenland"], answer: "1" },
-                    { prompt: "What was he trying to photograph?", options: ["Glaciers", "Whales", "Northern Lights"], answer: "2" },
-                    { prompt: "How far did he drive from the city?", options: ["2 hours", "4 hours", "6 hours"], answer: "1" },
-                    { prompt: "What city did he leave from?", options: ["Oslo", "Reykjavik", "Stockholm"], answer: "1" },
-                    { prompt: "How long was the camera exposure?", options: ["30 seconds", "1 minute", "10 seconds"], answer: "0" }
-                ]
-            },
-            {
-                text: "Emma, an aspiring pastry chef, flew to Florence, Italy for a two-week intensive culinary masterclass. On her final day, she successfully baked 24 perfect almond croissants that earned her the top prize from the head instructor.",
-                questions: [
-                    { prompt: "What city did Emma fly to?", options: ["Rome", "Milan", "Florence"], answer: "2" },
-                    { prompt: "How long was her masterclass?", options: ["One week", "Two weeks", "One month"], answer: "1" },
-                    { prompt: "What is Emma's profession?", options: ["Restaurant manager", "Pastry chef", "Food critic"], answer: "1" },
-                    { prompt: "How many croissants did she bake?", options: ["12", "18", "24"], answer: "2" },
-                    { prompt: "What kind of croissants were they?", options: ["Chocolate", "Almond", "Butter"], answer: "1" }
-                ]
-            },
-            {
-                text: "Chris spent his entire Saturday morning hunting for vintage car parts at a massive swap meet in Detroit. He haggled with three different vendors and finally walked away with a pristine 1968 Mustang steering wheel for exactly $150.",
-                questions: [
-                    { prompt: "What day of the week was it?", options: ["Friday", "Saturday", "Sunday"], answer: "1" },
-                    { prompt: "What city was the swap meet in?", options: ["Detroit", "Chicago", "Indianapolis"], answer: "0" },
-                    { prompt: "How many vendors did he haggle with?", options: ["Two", "Three", "Five"], answer: "1" },
-                    { prompt: "What specific part did he buy?", options: ["Carburetor", "Windshield", "Steering wheel"], answer: "2" },
-                    { prompt: "How much did he pay for it?", options: ["$100", "$150", "$200"], answer: "1" }
-                ]
-            },
-            {
-                text: "Sophie, a marine biologist, spent the summer stationed at a research facility on the Great Barrier Reef in Australia. During a deep dive in July, she tagged exactly 7 rare sea turtles to track their migration patterns.",
-                questions: [
-                    { prompt: "What is Sophie's profession?", options: ["Scuba instructor", "Marine biologist", "Oceanographer"], answer: "1" },
-                    { prompt: "Where was she stationed?", options: ["Galapagos", "Caribbean", "Great Barrier Reef"], answer: "2" },
-                    { prompt: "What month did she do her deep dive?", options: ["June", "July", "August"], answer: "1" },
-                    { prompt: "How many sea turtles did she tag?", options: ["5", "7", "9"], answer: "1" },
-                    { prompt: "What was the purpose of tagging them?", options: ["Medical check", "Track migration patterns", "Population counting"], answer: "1" }
-                ]
-            },
-            {
-                text: "Marcus is an architect who took a special architectural boat tour down the river in Chicago to study skyscrapers. The tour lasted exactly 90 minutes, during which he sketched 4 famous historic buildings in his leather notebook.",
-                questions: [
-                    { prompt: "What is Marcus's profession?", options: ["Engineer", "Architect", "Historian"], answer: "1" },
-                    { prompt: "What city was he taking studying in?", options: ["New York", "Chicago", "Boston"], answer: "1" },
-                    { prompt: "What kind of tour was he on?", options: ["Walking tour", "Helicopter tour", "Boat tour"], answer: "2" },
-                    { prompt: "How long did the tour last?", options: ["60 minutes", "90 minutes", "120 minutes"], answer: "1" },
-                    { prompt: "How many buildings did he sketch?", options: ["3", "4", "5"], answer: "1" }
-                ]
-            },
-            {
-                text: "Natalie flew into the heart of the Amazon rainforest to catalog undiscovered plant species. On the third day of her damp expedition, she stumbled upon a brightly colored purple orchid growing on the side of a massive mahogany tree.",
-                questions: [
-                    { prompt: "Where did Natalie fly to?", options: ["Amazon rainforest", "Congo basin", "Sumatra"], answer: "0" },
-                    { prompt: "What was she trying to catalog?", options: ["Insects", "Tree frogs", "Plant species"], answer: "2" },
-                    { prompt: "What day of the expedition did she find the flower?", options: ["First", "Second", "Third"], answer: "2" },
-                    { prompt: "What color was the orchid?", options: ["Red", "Purple", "Yellow"], answer: "1" },
-                    { prompt: "What kind of tree was it growing on?", options: ["Mahogany", "Oak", "Rubber tree"], answer: "0" }
-                ]
-            },
-            {
-                text: "Ryan, an independent country musician, booked a small studio in Nashville for his debut album. After playing his acoustic guitar for 8 hours straight, his fingers were blistered, but he managed to perfectly record 5 original songs.",
-                questions: [
-                    { prompt: "What genre of music does Ryan play?", options: ["Rock", "Country", "Folk"], answer: "1" },
-                    { prompt: "What city was the studio in?", options: ["Austin", "Nashville", "Memphis"], answer: "1" },
-                    { prompt: "What instrument was he playing?", options: ["Piano", "Electric guitar", "Acoustic guitar"], answer: "2" },
-                    { prompt: "How many hours did he play straight?", options: ["6 hours", "8 hours", "10 hours"], answer: "1" },
-                    { prompt: "How many original songs did he record?", options: ["3", "5", "7"], answer: "1" }
-                ]
-            },
-            {
-                text: "Elena trained for an entire year to qualify for the famous Boston Marathon. The weather was a freezing 40 degrees and raining, but she pushed through the pain and crossed the finish line in an impressive 3 hours and 15 minutes.",
-                questions: [
-                    { prompt: "What marathon was Elena running?", options: ["New York", "Boston", "Chicago"], answer: "1" },
-                    { prompt: "How long did she train to qualify?", options: ["Six months", "One year", "Two years"], answer: "1" },
-                    { prompt: "What was the temperature during the race?", options: ["30 degrees", "40 degrees", "50 degrees"], answer: "1" },
-                    { prompt: "What was the weather like?", options: ["Sunny", "Snowing", "Raining"], answer: "2" },
-                    { prompt: "What was her finishing time?", options: ["3 hours 15 minutes", "3 hours 30 minutes", "3 hours 45 minutes"], answer: "0" }
-                ]
-            },
-            {
-                text: "Victor rented a tiny stone cottage in the countryside of Provence, France to focus on his painting. Over a single peaceful weekend, he used up 12 tubes of blue oil paint trying to capture the vast lavender fields.",
-                questions: [
-                    { prompt: "What country was Victor visiting?", options: ["Italy", "Spain", "France"], answer: "2" },
-                    { prompt: "What region was the cottage in?", options: ["Burgundy", "Provence", "Bordeaux"], answer: "1" },
-                    { prompt: "How many tubes of paint did he use up?", options: ["10", "12", "14"], answer: "1" },
-                    { prompt: "What color paint did he use the most?", options: ["Blue", "Purple", "Green"], answer: "0" },
-                    { prompt: "What was he trying to paint?", options: ["Sunflowers", "Lavender fields", "Vineyards"], answer: "1" }
-                ]
-            },
-            {
-                text: "Harper packed her heavy telescope and drove high up into the Andes mountains of Chile to escape the city light pollution. At exactly 2:00 AM, she was thrilled to spot a rare passing comet with a glowing green tail.",
-                questions: [
-                    { prompt: "What mountain range did Harper drive into?", options: ["Rockies", "Andes", "Alps"], answer: "1" },
-                    { prompt: "What country was she in?", options: ["Argentina", "Chile", "Peru"], answer: "1" },
-                    { prompt: "Why did she go up into the mountains?", options: ["Fresh air", "Escape light pollution", "Higher altitude"], answer: "1" },
-                    { prompt: "What time did she spot the object?", options: ["Midnight", "1:00 AM", "2:00 AM"], answer: "2" },
-                    { prompt: "What color was the comet's tail?", options: ["Blue", "Green", "White"], answer: "1" }
-                ]
-            },
-            {
-                text: "Leo saved up his bartender tips for months to take a dream surfing trip to the volcanic island of Bali. On his first day hitting the water, he successfully caught a massive 10-foot wave right before a heavy tropical storm rolled in.",
-                questions: [
-                    { prompt: "How did Leo save money for his trip?", options: ["Selling his car", "Bartender tips", "Office bonus"], answer: "1" },
-                    { prompt: "What island did he travel to?", options: ["Bali", "Fiji", "Maui"], answer: "0" },
-                    { prompt: "How large was the wave he caught?", options: ["8-foot", "10-foot", "12-foot"], answer: "1" },
-                    { prompt: "When did he catch the wave?", options: ["His first day", "His last day", "The middle of the trip"], answer: "0" },
-                    { prompt: "What weather event happened right after?", options: ["Tsunami", "Tropical storm", "Earthquake"], answer: "1" }
-                ]
-            },
-            {
-                text: "Chloe, a senior software engineer, flew halfway across the world to attend an artificial intelligence conference in Tokyo. During the event, she drank 5 cups of matcha tea and networked with developers from 18 different countries.",
-                questions: [
-                    { prompt: "What is Chloe's job title?", options: ["Data Analyst", "Senior software engineer", "Product Manager"], answer: "1" },
-                    { prompt: "What city was the conference in?", options: ["Seoul", "Tokyo", "Singapore"], answer: "1" },
-                    { prompt: "What was the topic of the conference?", options: ["Cybersecurity", "Blockchain", "Artificial intelligence"], answer: "2" },
-                    { prompt: "How many cups of tea did she drink?", options: ["3", "5", "7"], answer: "1" },
-                    { prompt: "How many different countries were the developers from?", options: ["12", "15", "18"], answer: "2" }
-                ]
-            }
-        ];
-
-        this.addresses = [
-            { text: "4820 Redwood St, Seattle, WA, USA", options: ["4820 Redwood St, Seattle, WA, USA", "4820 Rosewood St, Seattle, WA, USA", "4280 Redwood St, Seattle, WA, USA", "4820 Redwood St, Seattle, OR, USA"], answer: "0" },
-            { text: "1594 Oakhaven Dr, Austin, TX, USA", options: ["1594 Oaklawn Dr, Austin, TX, USA", "1594 Oakhaven Dr, Austin, TX, USA", "1549 Oakhaven Dr, Austin, TX, USA", "1594 Oakhaven Dr, Houston, TX, USA"], answer: "1" },
-            { text: "7311 Maplewood Ave, Denver, CO, USA", options: ["7131 Maplewood Ave, Denver, CO, USA", "7311 Maplerose Ave, Denver, CO, USA", "7311 Maplewood Ave, Boulder, CO, USA", "7311 Maplewood Ave, Denver, CO, USA"], answer: "3" },
-            { text: "2956 Pinecrest Ln, Miami, FL, USA", options: ["2956 Pinecrest Ln, Miami, FL, USA", "2596 Pinecrest Ln, Miami, FL, USA", "2956 Pinehurst Ln, Miami, FL, USA", "2956 Pinecrest Ln, Tampa, FL, USA"], answer: "0" },
-            { text: "8043 Willow Grove, Boston, MA, USA", options: ["8043 Willow Brook, Boston, MA, USA", "8403 Willow Grove, Boston, MA, USA", "8043 Willow Grove, Boston, MA, USA", "8043 Willow Grove, Boston, ME, USA"], answer: "2" },
-            { text: "6127 Cedar Point, Phoenix, AZ, USA", options: ["6217 Cedar Point, Phoenix, AZ, USA", "6127 Cedar Point, Tucson, AZ, USA", "6127 Center Point, Phoenix, AZ, USA", "6127 Cedar Point, Phoenix, AZ, USA"], answer: "3" },
-            { text: "3489 Birchwood Way, Portland, OR, USA", options: ["3489 Birchwood Way, Portland, WA, USA", "3489 Birchwood Way, Portland, OR, USA", "3498 Birchwood Way, Portland, OR, USA", "3489 Beechwood Way, Portland, OR, USA"], answer: "1" },
-            { text: "5712 Aspen Ridge, Raleigh, NC, USA", options: ["5712 Aspen Ridge, Raleigh, SC, USA", "5172 Aspen Ridge, Raleigh, NC, USA", "5712 Aspen Ridge, Raleigh, NC, USA", "5712 Ash Ridge, Raleigh, NC, USA"], answer: "2" },
-            { text: "9205 Sycamore Ct, Atlanta, GA, USA", options: ["9205 Sycamore Ct, Atlanta, GA, USA", "9025 Sycamore Ct, Atlanta, GA, USA", "9205 Sycamore Dr, Atlanta, GA, USA", "9205 Sycamore Ct, Athens, GA, USA"], answer: "0" },
-            { text: "4368 Elmhurst Blvd, Chicago, IL, USA", options: ["4386 Elmhurst Blvd, Chicago, IL, USA", "4368 Elmhurst Blvd, Chicago, IN, USA", "4368 Elmwood Blvd, Chicago, IL, USA", "4368 Elmhurst Blvd, Chicago, IL, USA"], answer: "3" },
-            { text: "1854 Hickory Ln, Nashville, TN, USA", options: ["1854 Hickory Ln, Nashville, TN, USA", "1845 Hickory Ln, Nashville, TN, USA", "1854 Hickory Dr, Nashville, TN, USA", "1854 Hickory Ln, Knoxville, TN, USA"], answer: "0" },
-            { text: "7932 Chestnut St, Madison, WI, USA", options: ["7932 Chestnut St, Milwaukee, WI, USA", "7932 Chestnut St, Madison, WI, USA", "7392 Chestnut St, Madison, WI, USA", "7932 Walnut St, Madison, WI, USA"], answer: "1" },
-            { text: "2648 Magnolia Pkwy, Orlando, FL, USA", options: ["2648 Magnolia Pkwy, Orlando, CA, USA", "2468 Magnolia Pkwy, Orlando, FL, USA", "2648 Magnolia Pkwy, Orlando, FL, USA", "2648 Marigold Pkwy, Orlando, FL, USA"], answer: "2" },
-            { text: "5071 Juniper Cir, Bellevue, WA, USA", options: ["5071 Juniper Cir, Bellevue, WA, USA", "5701 Juniper Cir, Bellevue, WA, USA", "5071 Juniper Ct, Bellevue, WA, USA", "5071 Jupiter Cir, Bellevue, WA, USA"], answer: "0" },
-            { text: "6839 Cypress Dr, Omaha, NE, USA", options: ["6893 Cypress Dr, Omaha, NE, USA", "6839 Cypress Way, Omaha, NE, USA", "6839 Cypress Dr, Lincoln, NE, USA", "6839 Cypress Dr, Omaha, NE, USA"], answer: "3" },
-            { text: "3194 Spruce Trl, Boise, ID, USA", options: ["3194 Spruce Trl, Boise, IA, USA", "3194 Spruce Trl, Boise, ID, USA", "3914 Spruce Trl, Boise, ID, USA", "3194 Spring Trl, Boise, ID, USA"], answer: "1" },
-            { text: "8526 Dogwood Ave, Fargo, ND, USA", options: ["8526 Dogwood Ave, Fargo, SD, USA", "8256 Dogwood Ave, Fargo, ND, USA", "8526 Dogwood Ave, Fargo, ND, USA", "8526 Dogwood Ln, Fargo, ND, USA"], answer: "2" },
-            { text: "1407 Poplar Pl, Reno, NV, USA", options: ["1407 Poplar Pl, Reno, NV, USA", "1470 Poplar Pl, Reno, NV, USA", "1407 Popular Pl, Reno, NV, USA", "1407 Poplar Pl, Vegas, NV, USA"], answer: "0" },
-            { text: "4753 Alder Xing, Tulsa, OK, USA", options: ["4753 Alder Xing, Tulsa, TX, USA", "4573 Alder Xing, Tulsa, OK, USA", "4753 Aster Xing, Tulsa, OK, USA", "4753 Alder Xing, Tulsa, OK, USA"], answer: "3" },
-            { text: "9618 Hazel Rd, Mesa, AZ, USA", options: ["9618 Hazel Rd, Mesa, NM, USA", "9618 Hazel Rd, Mesa, AZ, USA", "9168 Hazel Rd, Mesa, AZ, USA", "9618 Hazel Ln, Mesa, AZ, USA"], answer: "1" },
-            { text: "1928 Birch Creek Rd, Richmond, VA, USA", options: ["1928 Birch Creek Rd, Richmond, VA, USA", "1829 Birch Creek Rd, Richmond, VA, USA", "1928 Birch Creek Dr, Richmond, VA, USA", "1928 Birch Creek Rd, Roanoke, VA, USA"], answer: "0" },
-            { text: "5431 Oceanview Ave, Monterey, CA, USA", options: ["5431 Oceanview Ave, Malibu, CA, USA", "5413 Oceanview Ave, Monterey, CA, USA", "5431 Oceanview Ave, Monterey, CA, USA", "5431 Oceanfront Ave, Monterey, CA, USA"], answer: "2" },
-            { text: "8765 Pinewood Ln, Savannah, GA, USA", options: ["8765 Pinewood Ln, Savannah, SC, USA", "8756 Pinewood Ln, Savannah, GA, USA", "8765 Pinehurst Ln, Savannah, GA, USA", "8765 Pinewood Ln, Savannah, GA, USA"], answer: "3" },
-            { text: "2314 Meadow Dr, Madison, AL, USA", options: ["2314 Meadow Way, Madison, AL, USA", "2314 Meadow Dr, Madison, AL, USA", "2134 Meadow Dr, Madison, AL, USA", "2314 Meadow Dr, Mobile, AL, USA"], answer: "1" },
-            { text: "6590 Riverbend Ct, Cincinnati, OH, USA", options: ["6590 Riverbend Ct, Cincinnati, OH, USA", "6509 Riverbend Ct, Cincinnati, OH, USA", "6590 Riverwalk Ct, Cincinnati, OH, USA", "6590 Riverbend Ct, Cleveland, OH, USA"], answer: "0" },
-            { text: "1023 Summit Way, Salt Lake City, UT, USA", options: ["1032 Summit Way, Salt Lake City, UT, USA", "1023 Summer Way, Salt Lake City, UT, USA", "1023 Summit Way, Salt Lake City, UT, USA", "1023 Summit Way, Park City, UT, USA"], answer: "2" },
-            { text: "7845 Valley Forge, Lexington, KY, USA", options: ["7845 Valley Forge, Louisville, KY, USA", "7854 Valley Forge, Lexington, KY, USA", "7845 Valley View, Lexington, KY, USA", "7845 Valley Forge, Lexington, KY, USA"], answer: "3" },
-            { text: "4901 Harbor Blvd, Charleston, SC, USA", options: ["4901 Harbor Blvd, Charleston, NC, USA", "4901 Harbor Blvd, Charleston, SC, USA", "4091 Harbor Blvd, Charleston, SC, USA", "4901 Haven Blvd, Charleston, SC, USA"], answer: "1" }
-        ];
+        this.stories = window.COGNITIVE_STORIES || [];
+        this.addresses = window.COGNITIVE_ADDRESSES || [];
+        this.storyMathTemplates = window.COGNITIVE_MATH_TEMPLATES || [];
 
         // Game-specific variables
         this.gameData = {
@@ -492,204 +268,6 @@ class GameManager {
             nBackCanPress: false,
             nBackCurrentTarget: false
         };
-
-        this.storyMathTemplates = [
-            // 1. Shopping Change
-            () => {
-                const names = ["Michael", "Sarah", "David", "Emily", "John", "Anna"];
-                const name = names[Math.floor(Math.random() * names.length)];
-                const items = ["apples", "notebooks", "coffee mugs", "T-shirts", "plants"];
-                const item = items[Math.floor(Math.random() * items.length)];
-                const budget = Math.floor(Math.random() * 5 + 5) * 10; // 50 to 90
-                const qty = Math.floor(Math.random() * 4) + 3; // 3 to 6
-                const price = Math.floor(Math.random() * 6) + 4; // 4 to 9
-                const extra = Math.floor(Math.random() * 8) + 5; // 5 to 12
-                const text = `${name} goes to the store with $${budget} in cash. They buy ${qty} ${item} for $${price} each. At the register, they also grab a snack for $${extra}. How much change should they receive?`;
-                const answer = budget - (qty * price) - extra;
-                return { text, answer };
-            },
-            // 2. Travel Time with Break
-            () => {
-                const names = ["Jessica", "Mark", "Olivia", "Ethan"];
-                const name = names[Math.floor(Math.random() * names.length)];
-                const speed1 = (Math.floor(Math.random() * 3) + 6) * 10; // 60, 70, 80
-                const hours1 = Math.floor(Math.random() * 3) + 2; // 2, 3, 4
-                const speed2 = (Math.floor(Math.random() * 3) + 7) * 10; // 70, 80, 90
-                const hours2 = Math.floor(Math.random() * 3) + 2; // 2, 3, 4
-                const breakHours = 1;
-                const totalDist = (speed1 * hours1) + (speed2 * hours2);
-                const text = `${name} is driving a total distance of ${totalDist} km. For the first ${hours1} hours, they drive at ${speed1} km/h. They then take a 1-hour break. If they drive the remaining distance at ${speed2} km/h, how many total hours will the whole trip take from start to finish?`;
-                const answer = hours1 + breakHours + hours2;
-                return { text, answer };
-            },
-            // 3. Ratios and Splitting
-            () => {
-                const multi = Math.floor(Math.random() * 4) + 3; // 3 to 6
-                const total = multi * 12; // 36, 48, 60, 72
-                const groupA = total / 4;
-                const extra = Math.floor(Math.random() * 5) + 4; // 4 to 8
-                const groupB = groupA + extra;
-                const text = `A bakery makes a batch of ${total} cookies for 3 classrooms. Classroom A receives exactly one-quarter of the cookies. Classroom B receives ${extra} more cookies than Classroom A. Classroom C gets the rest. How many cookies does Classroom C receive?`;
-                const answer = total - groupA - groupB;
-                return { text, answer };
-            },
-            // 4. Area / Tiling
-            () => {
-                const width = Math.floor(Math.random() * 5) + 10; // 10 to 14
-                const length = Math.floor(Math.random() * 5) + 12; // 12 to 16
-                const area = width * length;
-                const tile = (Math.random() > 0.5) ? 2 : 4; // 2 or 4 sq ft
-                const text = `A room is ${width} feet wide and ${length} feet long. You want to cover the floor with tiles that are each ${tile} square feet. How many tiles do you need?`;
-                const answer = area / tile;
-                return { text, answer };
-            },
-            // 5. Hourly Wage
-            () => {
-                const wage = Math.floor(Math.random() * 6) + 15; // 15 to 20
-                const hours = Math.floor(Math.random() * 3) + 6; // 6 to 8
-                const days = Math.floor(Math.random() * 3) + 4; // 4 to 6
-                const spend = Math.floor(Math.random() * 5) * 50 + 100; // 100 to 300
-                const text = `A contractor earns $${wage} per hour. They work ${hours} hours a day for ${days} days. If they spend $${spend} on supplies, how much money do they have left?`;
-                const answer = (wage * hours * days) - spend;
-                return { text, answer };
-            },
-            // 6. Discount
-            () => {
-                const base = (Math.floor(Math.random() * 6) + 4) * 20; // 80, 100 ... 180
-                const discount = 25; // 25%
-                const coupon = Math.floor(Math.random() * 3) * 5 + 10; // 10, 15, 20
-                const text = `A jacket originally costs $${base}. It is on sale for ${discount}% off. You also have a coupon for an additional $${coupon} off the sale price. What is the final price?`;
-                const answer = (base * (1 - discount / 100)) - coupon;
-                return { text, answer };
-            },
-            // 7. Age logic
-            () => {
-                const names = ["Tom", "Lucy", "Sam", "Mia"];
-                const name = names[Math.floor(Math.random() * names.length)];
-                const ageA = Math.floor(Math.random() * 5) + 10; // 10 to 14
-                const years = Math.floor(Math.random() * 6) + 5; // 5 to 10
-                const text = `${name} is ${ageA} years old. Their older sibling is exactly twice as old. In ${years} years, how old will the older sibling be?`;
-                const answer = (ageA * 2) + years;
-                return { text, answer };
-            },
-            // 8. Fundraising
-            () => {
-                const total = Math.floor(Math.random() * 5 + 2) * 100; // 200 to 600
-                const a = Math.floor(total * 0.4 / 10) * 10;
-                const b = a / 2;
-                const text = `A school club needs to raise $${total}. Student A raised $${a}. Student B raised exactly half as much as Student A. Student C raised the rest to hit the goal. How much did Student C raise?`;
-                const answer = total - a - b;
-                return { text, answer };
-            },
-            // 9. Inventory
-            () => {
-                const start = (Math.floor(Math.random() * 6) + 6) * 3; // 18, 21 ... 33
-                const shipment = Math.floor(Math.random() * 10) + 15; // 15 to 24
-                const text = `A bookstore starts the week with ${start} copies of a bestseller. They sell entirely one-third of their stock. Then, they receive a new shipment of ${shipment} copies. How many copies do they have now?`;
-                const answer = (start - (start / 3)) + shipment;
-                return { text, answer };
-            },
-            // 10. Reading Speed
-            () => {
-                const days = Math.floor(Math.random() * 4) + 5; // 5 to 8
-                const speed = Math.floor(Math.random() * 10) + 20; // 20 to 29
-                const pages = days * speed;
-                const text = `A book has exactly ${pages} pages. If you read at a steady pace of ${speed} pages per day, how many days will it take to finish the book?`;
-                const answer = days;
-                return { text, answer };
-            },
-            // 11. Splitting Bill
-            () => {
-                const people = Math.floor(Math.random() * 3) + 3; // 3 to 5
-                const perPerson = Math.floor(Math.random() * 10) + 15; // 15 to 24
-                const total = people * perPerson;
-                const tip = Math.floor(Math.random() * 5) + 10; // 10 to 14
-                const text = `A group of ${people} friends go to dinner. The total bill including tip is $${total + tip}. They want to split the food bill evenly, but one person decides to pay the entire $${tip} tip themselves. How much do the OTHER friends pay each?`;
-                const answer = total / people;
-                return { text, answer };
-            },
-            // 12. Paint
-            () => {
-                const cans = Math.floor(Math.random() * 4) + 4; // 4 to 7
-                const coverage = Math.floor(Math.random() * 10) + 30; // 30 to 39
-                const total = cans * coverage;
-                const text = `You need to paint a fence that is ${total} feet long. One can of paint perfectly covers ${coverage} feet. You already have 2 cans in your garage. How many NEW cans do you need to buy?`;
-                const answer = cans - 2;
-                return { text, answer };
-            },
-            // 13. Subscriptions
-            () => {
-                const plan1 = Math.floor(Math.random() * 5) + 10; // 10 to 14
-                const plan2 = plan1 + 5;
-                const text = `A streaming service costs $${plan1} per month. You subscribe for a full year (12 months). Then, you upgrade to the premium plan at $${plan2} per month for the next 6 months. What is your total cost over those 18 months?`;
-                const answer = (plan1 * 12) + (plan2 * 6);
-                return { text, answer };
-            },
-            // 14. Animals (Legs)
-            () => {
-                const cows = Math.floor(Math.random() * 6) + 5; // 5 to 10
-                const hens = Math.floor(Math.random() * 10) + 10; // 10 to 19
-                const text = `A farmer has ${cows} cows and ${hens} hens. Assuming all animals are healthy, how many animal legs are there in total?`;
-                const answer = (cows * 4) + (hens * 2);
-                return { text, answer };
-            },
-            // 15. Savings Goal
-            () => {
-                const goal = Math.floor(Math.random() * 5 + 5) * 100; // 500 to 900
-                const save = Math.floor(Math.random() * 20) + 40; // 40 to 59
-                const weeks = Math.floor(Math.random() * 4) + 6; // 6 to 9
-                const text = `You want to buy a laptop that costs $${goal}. You save $${save} every week. After ${weeks} weeks of saving, how much MORE money do you need to reach your goal?`;
-                const answer = goal - (save * weeks);
-                return { text, answer };
-            },
-            // 16. Salary/Taxes
-            () => {
-                const salary = Math.floor(Math.random() * 3 + 4) * 1000; // 4000 to 6000
-                const taxRate = Math.floor(Math.random() * 3) * 5 + 15; // 15, 20, 25
-                const months = Math.floor(Math.random() * 4) + 3; // 3 to 6
-                const text = `You earn a gross salary of $${salary} per month. Exactly ${taxRate}% of your salary is deducted for taxes before you are paid. How much net take-home pay do you receive over the course of ${months} months?`;
-                const answer = (salary * (1 - taxRate / 100)) * months;
-                return { text, answer };
-            },
-            // 17. Baking/Ingredients
-            () => {
-                const baseFlour = Math.floor(Math.random() * 3) + 2; // 2 to 4
-                const baseCookies = Math.floor(Math.random() * 2 + 1) * 12; // 12 or 24
-                const targetCookies = baseCookies * (Math.floor(Math.random() * 3) + 3); // 36, 48, ... target
-                const text = `A recipe requires exactly ${baseFlour} cups of flour to bake a batch of ${baseCookies} master-size cookies. If you are hosting a party and need to bake ${targetCookies} of these cookies, how many cups of flour will you need in total?`;
-                const answer = (targetCookies / baseCookies) * baseFlour;
-                return { text, answer };
-            },
-            // 18. Gym Memberships
-            () => {
-                const joinFee = (Math.floor(Math.random() * 5) + 5) * 10; // 50 to 90
-                const monthly = (Math.floor(Math.random() * 4) + 3) * 10; // 30 to 60
-                const months = Math.floor(Math.random() * 6) + 6; // 6 to 11
-                const text = `A local fitness gym charges a one-time joining fee of $${joinFee} and a flat rate of $${monthly} per month. If you sign a contract and stay a member for ${months} months, how much will you have paid the gym in total?`;
-                const answer = joinFee + (monthly * months);
-                return { text, answer };
-            },
-            // 19. Train Commute
-            () => {
-                const speed = (Math.floor(Math.random() * 4) + 6) * 10; // 60 to 90
-                const hours = Math.floor(Math.random() * 3) + 4; // 4 to 6
-                const rate = Math.floor(Math.random() * 3) + 2; // 2 to 4
-                const text = `An express train travels at a constant speed of ${speed} miles per hour. It takes exactly ${hours} hours to reach its destination. If the railway company charges $${rate} for every single mile traveled, what is the cost of the ticket?`;
-                const answer = (speed * hours) * rate;
-                return { text, answer };
-            },
-            // 20. Gardening
-            () => {
-                const width = Math.floor(Math.random() * 5) + 5; // 5 to 9
-                const length = Math.floor(Math.random() * 5) + 10; // 10 to 14
-                const area = width * length;
-                const coverage = 10;
-                const cost = Math.floor(Math.random() * 10) + 15; // 15 to 24
-                const text = `You are designing a rectangular garden that is ${width} feet wide and ${length} feet long. A bag of premium fertilizer perfectly covers exactly ${coverage} square feet of ground and costs $${cost} per bag. How much will it cost to fertilize the entire garden area?`;
-                const answer = (Math.ceil(area / coverage)) * cost;
-                return { text, answer };
-            }
-        ];
 
         this.initScreens();
         this.showScreen('menu-screen');
@@ -733,127 +311,157 @@ class GameManager {
 
     bindEvents() {
         // --- Settings & History Menus ---
-        document.getElementById('settings-btn').addEventListener('click', () => {
-            const modal = document.getElementById('settings-modal');
-            modal.style.display = 'flex';
-            document.getElementById('toggle-sound').checked = this.settings.soundEnabled;
-            document.getElementById('toggle-theme').checked = this.settings.darkMode;
-        });
+        if (this.settingsBtn) {
+            this.settingsBtn.addEventListener('click', () => {
+                const modal = this.settingsModal;
+                if (modal) modal.style.display = 'flex';
+                if (this.toggleSound) this.toggleSound.checked = this.settings.soundEnabled;
+                if (this.toggleTheme) this.toggleTheme.checked = this.settings.darkMode;
+            });
+        }
 
-        document.getElementById('close-settings-btn').addEventListener('click', () => {
-            document.getElementById('settings-modal').style.display = 'none';
-        });
+        if (this.closeSettingsBtn) {
+            this.closeSettingsBtn.addEventListener('click', () => {
+                if (this.settingsModal) this.settingsModal.style.display = 'none';
+            });
+        }
 
-        document.getElementById('toggle-sound').addEventListener('change', (e) => {
-            this.settings.soundEnabled = e.target.checked;
-            this.saveSettings();
-        });
+        if (this.toggleSound) {
+            this.toggleSound.addEventListener('change', (e) => {
+                this.settings.soundEnabled = e.target.checked;
+                this.saveSettings();
+            });
+        }
 
-        document.getElementById('toggle-theme').addEventListener('change', (e) => {
-            this.settings.darkMode = e.target.checked;
-            this.applyTheme(this.settings.darkMode);
-            this.saveSettings();
-        });
+        if (this.toggleTheme) {
+            this.toggleTheme.addEventListener('change', (e) => {
+                this.settings.darkMode = e.target.checked;
+                this.applyTheme(this.settings.darkMode);
+                this.saveSettings();
+            });
+        }
 
-        document.getElementById('view-history-btn').addEventListener('click', () => {
-            this.renderHistory();
-            this.showScreen('history-screen');
-        });
+        if (this.viewHistoryBtn) {
+            this.viewHistoryBtn.addEventListener('click', () => {
+                this.renderHistory();
+                this.showScreen('history-screen');
+            });
+        }
 
-        document.getElementById('close-history-btn').addEventListener('click', () => {
-            this.showScreen('menu-screen');
-        });
+        if (this.closeHistoryBtn) {
+            this.closeHistoryBtn.addEventListener('click', () => {
+                this.showScreen('menu-screen');
+            });
+        }
 
         // --- Menu Buttons ---
-        document.getElementById('start-full-btn').addEventListener('click', () => {
-            this.gameData.isIndividualTest = false;
+        if (this.startFullBtn) {
+            this.startFullBtn.addEventListener('click', () => {
+                this.gameData.isIndividualTest = false;
 
-            // Build randomized test sequence
-            const selectEl = document.getElementById('duration-select');
-            const numRounds = selectEl ? parseInt(selectEl.value) : 1;
-            this.gameData.assessmentLengthStr = selectEl ? selectEl.options[selectEl.selectedIndex].text : "Short (1 Round)";
-            this.gameData.assessmentStartTime = Date.now();
-            this.gameData.numRounds = numRounds; // Store to dynamically calculate round size later
-            this.testSequence = [];
+                // Build randomized test sequence
+                const selectEl = this.durationSelect;
+                const numRounds = selectEl ? parseInt(selectEl.value) : 1;
+                this.gameData.assessmentLengthStr = selectEl ? selectEl.options[selectEl.selectedIndex].text : "Short (1 Round)";
+                this.gameData.assessmentStartTime = Date.now();
+                this.gameData.numRounds = numRounds; // Store to dynamically calculate round size later
+                
+                // Shuffle standard tests across all rounds
+                let standardTests = [];
+                for (let r = 0; r < numRounds; r++) {
+                    const testsRound = ['audioReaction', 'visualReaction', 'inhibitoryControl', 'flankerArrow', 'visualSpatialMemory', 'simultaneousSpatialMemory', 'sequentialNumberMemory', 'reverseSequentialNumberMemory', 'nBackTask', 'chimpTest', 'mentalMath', 'storyMath', 'clockReading'];
+                    for (let i = testsRound.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [testsRound[i], testsRound[j]] = [testsRound[j], testsRound[i]];
+                    }
+                    standardTests = standardTests.concat(testsRound);
+                }
 
-            for (let r = 0; r < numRounds; r++) {
-                const testsRound = ['audioReaction', 'visualReaction', 'inhibitoryControl', 'flankerArrow', 'visualSpatialMemory', 'simultaneousSpatialMemory', 'sequentialNumberMemory', 'reverseSequentialNumberMemory', 'nBackTask', 'chimpTest', 'mentalMath', 'storyMath'];
-
-                // Shuffle standard tests
-                for (let i = testsRound.length - 1; i > 0; i--) {
+                // Pick 3 unique stories for the entire test
+                let availableStories = [...this.stories];
+                for (let i = availableStories.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
-                    [testsRound[i], testsRound[j]] = [testsRound[j], testsRound[i]];
+                    [availableStories[i], availableStories[j]] = [availableStories[j], availableStories[i]];
+                }
+                this.gameData.selectedStories = availableStories.slice(0, 3);
+
+                // Pre-assign unique questions for each recall phase (Option A)
+                // Story 1: 3 unique questions
+                const story1QIndices = [0, 1, 2, 3, 4];
+                for (let i = story1QIndices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [story1QIndices[i], story1QIndices[j]] = [story1QIndices[j], story1QIndices[i]];
+                }
+                this.gameData.story1Questions = [
+                    this.gameData.selectedStories[0].questions[story1QIndices[0]],
+                    this.gameData.selectedStories[0].questions[story1QIndices[1]],
+                    this.gameData.selectedStories[0].questions[story1QIndices[2]]
+                ];
+
+                // Story 2: 2 unique questions
+                const story2QIndices = [0, 1, 2, 3, 4];
+                for (let i = story2QIndices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [story2QIndices[i], story2QIndices[j]] = [story2QIndices[j], story2QIndices[i]];
+                }
+                this.gameData.story2Questions = [
+                    this.gameData.selectedStories[1].questions[story2QIndices[0]],
+                    this.gameData.selectedStories[1].questions[story2QIndices[1]]
+                ];
+
+                // Story 3: 1 question
+                const story3QIndex = Math.floor(Math.random() * 5);
+                this.gameData.story3Questions = [
+                    this.gameData.selectedStories[2].questions[story3QIndex]
+                ];
+
+                // Pick 1 unique address for the entire test
+                let availableAddresses = [...this.addresses];
+                for (let i = availableAddresses.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [availableAddresses[i], availableAddresses[j]] = [availableAddresses[j], availableAddresses[i]];
+                }
+                this.gameData.currentAddress = availableAddresses[0];
+
+                // Build sequence by placing memory tasks at exact positions
+                this.testSequence = [];
+                let stdIndex = 0;
+                const memoryPlacements = {
+                    1: 'addressMemoryReading',
+                    3: 'story1Reading',
+                    5: 'story1Recall1',
+                    8: 'story2Reading',
+                    10: 'story1Recall2',
+                    11: 'story2Recall1',
+                    14: 'story3Reading',
+                    16: 'story1Recall3',
+                    18: 'story2Recall2',
+                    20: 'story3Recall1'
+                };
+
+                const totalLength = standardTests.length + 11;
+                for (let pos = 1; pos <= totalLength; pos++) {
+                    if (pos === totalLength) {
+                        this.testSequence.push('addressMemoryQuestions');
+                    } else if (memoryPlacements[pos]) {
+                        this.testSequence.push(memoryPlacements[pos]);
+                    } else {
+                        this.testSequence.push(standardTests[stdIndex++]);
+                    }
                 }
 
-                // Partitioning framework to enforce zero overlap between memory tests
-                const gap1 = Math.floor(Math.random() * 2) + 2; // 2 or 3 standard tests between reading/questions 1
-                const gap2 = Math.floor(Math.random() * 2) + 2; // 2 or 3 standard tests between reading/questions 2
+                this.currentTestIndex = 0;
+                this.state.scores = {};
+                this.state.breakdowns = {};
+                this.startGameplay();
+            });
+        }
 
-                const leftovers = testsRound.length - gap1 - gap2;
-
-                // Distribute remainder into outer bounds and between the two tests
-                let b1 = Math.floor(Math.random() * (leftovers + 1));
-                let b2 = Math.floor(Math.random() * (leftovers - b1 + 1));
-                let b3 = leftovers - b1 - b2;
-
-                let roundSeq = [];
-                roundSeq = roundSeq.concat(testsRound.splice(0, b1));
-                roundSeq.push('MEM1_READ');
-                roundSeq = roundSeq.concat(testsRound.splice(0, gap1));
-                roundSeq.push('MEM1_QUEST');
-                roundSeq = roundSeq.concat(testsRound.splice(0, b2));
-                roundSeq.push('MEM2_READ');
-                roundSeq = roundSeq.concat(testsRound.splice(0, gap2));
-                roundSeq.push('MEM2_QUEST');
-                roundSeq = roundSeq.concat(testsRound.splice(0, b3));
-
-                // Randomize which memory type goes first
-                if (Math.random() > 0.5) {
-                    roundSeq = roundSeq.map(t => {
-                        if (t === 'MEM1_READ') return 'storyMemoryReading';
-                        if (t === 'MEM1_QUEST') return 'storyMemoryQuestions';
-                        if (t === 'MEM2_READ') return 'addressMemoryReading';
-                        if (t === 'MEM2_QUEST') return 'addressMemoryQuestions';
-                        return t;
-                    });
-                } else {
-                    roundSeq = roundSeq.map(t => {
-                        if (t === 'MEM1_READ') return 'addressMemoryReading';
-                        if (t === 'MEM1_QUEST') return 'addressMemoryQuestions';
-                        if (t === 'MEM2_READ') return 'storyMemoryReading';
-                        if (t === 'MEM2_QUEST') return 'storyMemoryQuestions';
-                        return t;
-                    });
-                }
-
-                this.testSequence = this.testSequence.concat(roundSeq);
-            }
-
-            // Prepare unique stories equal to numRounds
-            let availableStories = [...this.stories];
-            for (let i = availableStories.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [availableStories[i], availableStories[j]] = [availableStories[j], availableStories[i]];
-            }
-            this.gameData.selectedStoriesQueue = availableStories.slice(0, numRounds);
-
-            // Prepare unique addresses equal to numRounds
-            let availableAddresses = [...this.addresses];
-            for (let i = availableAddresses.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [availableAddresses[i], availableAddresses[j]] = [availableAddresses[j], availableAddresses[i]];
-            }
-            this.gameData.selectedAddressesQueue = availableAddresses.slice(0, numRounds);
-
-            this.currentTestIndex = 0;
-            this.state.scores = {};
-            this.state.breakdowns = {};
-            this.startGameplay();
-        });
-
-        document.getElementById('show-individual-btn').addEventListener('click', () => {
-            this.showScreen('practice-screen');
-        });
+        if (this.showIndividualBtn) {
+            this.showIndividualBtn.addEventListener('click', () => {
+                this.showScreen('practice-screen');
+            });
+        }
 
         document.querySelectorAll('.test-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -868,65 +476,81 @@ class GameManager {
         });
 
 
-        const submitMathBtn = document.getElementById('submit-math-btn');
+        const submitMathBtn = this.submitMathBtn;
         if (submitMathBtn) {
             submitMathBtn.addEventListener('click', () => this.handleMathSubmit());
         }
 
-        document.getElementById('begin-test-btn').addEventListener('click', () => {
-            this.startCurrentTest();
-        });
+        if (this.beginTestBtn) {
+            this.beginTestBtn.addEventListener('click', () => {
+                this.startCurrentTest();
+            });
+        }
 
-        document.getElementById('next-test-btn').addEventListener('click', () => {
-            if (this.gameData.isIndividualTest) {
-                this.showFinalResults(); // Quick exit for individual test mode
-            } else {
-                this.currentTestIndex++;
-                if (this.currentTestIndex < this.testSequence.length) {
-                    this.showInstructions();
+        if (this.nextTestBtn) {
+            this.nextTestBtn.addEventListener('click', () => {
+                if (this.gameData.isIndividualTest) {
+                    this.showFinalResults(); // Quick exit for individual test mode
                 } else {
-                    this.showFinalResults();
+                    this.currentTestIndex++;
+                    if (this.currentTestIndex < this.testSequence.length) {
+                        this.showInstructions();
+                    } else {
+                        this.showFinalResults();
+                    }
                 }
-            }
-        });
+            });
+        }
 
-        document.getElementById('restart-btn').addEventListener('click', () => {
-            this.currentTestIndex = 0;
-            this.state.scores = {};
-            this.showScreen('menu-screen');
-        });
+        if (this.restartBtn) {
+            this.restartBtn.addEventListener('click', () => {
+                this.currentTestIndex = 0;
+                this.state.scores = {};
+                this.showScreen('menu-screen');
+            });
+        }
 
-        document.getElementById('round-complete-btn').addEventListener('click', () => {
-            this.currentTestIndex++;
-            this.showInstructions();
-        });
+        if (this.roundCompleteBtn) {
+            this.roundCompleteBtn.addEventListener('click', () => {
+                this.currentTestIndex++;
+                this.showInstructions();
+            });
+        }
 
-        document.getElementById('submit-story-btn').addEventListener('click', () => {
-            this.handleStorySubmit();
-        });
+        if (this.submitStoryBtn) {
+            this.submitStoryBtn.addEventListener('click', () => {
+                this.handleStorySubmit();
+            });
+        }
 
-        document.getElementById('submit-address-btn').addEventListener('click', () => {
-            this.handleAddressSubmit();
-        });
+        if (this.submitAddressBtn) {
+            this.submitAddressBtn.addEventListener('click', () => {
+                this.handleAddressSubmit();
+            });
+        }
 
-        document.getElementById('submit-grid-btn').addEventListener('click', () => {
-            const testId = this.testSequence[this.currentTestIndex];
-            if (testId === 'visualSpatialMemory') {
-                this.handleGridSubmitSequential();
-            } else if (testId === 'simultaneousSpatialMemory') {
-                this.handleGridSubmitSimultaneous();
-            }
-            // chimpTest has no submit button — it auto-completes
-        });
+        if (this.submitGridBtn) {
+            this.submitGridBtn.addEventListener('click', () => {
+                const testId = this.testSequence[this.currentTestIndex];
+                if (testId === 'visualSpatialMemory') {
+                    this.handleGridSubmitSequential();
+                } else if (testId === 'simultaneousSpatialMemory') {
+                    this.handleGridSubmitSimultaneous();
+                }
+                // chimpTest has no submit button — it auto-completes
+            });
+        }
 
-        document.getElementById('submit-number-btn').addEventListener('click', () => {
-            const testId = this.testSequence[this.currentTestIndex];
-            if (testId === 'reverseSequentialNumberMemory') {
-                this.handleReverseNumberSubmit();
-            } else {
-                this.handleNumberSubmit();
-            }
-        });
+        if (this.submitNumberBtn) {
+            this.submitNumberBtn.addEventListener('click', () => {
+                const testId = this.testSequence[this.currentTestIndex];
+                if (testId === 'reverseSequentialNumberMemory') {
+                    this.handleReverseNumberSubmit();
+                } else {
+                    this.handleNumberSubmit();
+                }
+            });
+        }
 
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
@@ -947,45 +571,52 @@ class GameManager {
                 if (!activeScreen) return;
 
                 if (activeScreen.id === 'math-test-screen') {
-                    // Do NOT preventDefault here to allow input submission via listeners if needed,
-                    // or explicitly call handleMathSubmit if that's the preferred pattern.
-                    // The current listeners on mathInput and submitMathBtn are already set up.
-                    // However, we need to make sure we don't block it.
                     this.handleMathSubmit();
                 } else if (activeScreen.id === 'number-memory-screen') {
-                    const inputContainer = document.getElementById('number-input-container');
+                    const inputContainer = this.numberInputContainer;
                     if (inputContainer && inputContainer.style.display !== 'none') {
                         e.preventDefault();
-                        document.getElementById('submit-number-btn').click();
+                        if (this.submitNumberBtn) this.submitNumberBtn.click();
                     }
                 } else if (activeScreen.id === 'story-question-screen') {
                     e.preventDefault();
-                    document.getElementById('submit-story-btn').click();
+                    if (this.submitStoryBtn) this.submitStoryBtn.click();
                 } else if (activeScreen.id === 'address-questions-screen') {
                     e.preventDefault();
-                    document.getElementById('submit-address-btn').click();
+                    if (this.submitAddressBtn) this.submitAddressBtn.click();
                 } else if (activeScreen.id === 'grid-memory-screen') {
-                    const submitBtn = document.getElementById('submit-grid-btn');
+                    const submitBtn = this.submitGridBtn;
                     if (submitBtn && submitBtn.style.visibility !== 'hidden') {
                         e.preventDefault();
                         submitBtn.click();
                     }
                 } else if (activeScreen.id === 'instructions-screen') {
                     e.preventDefault();
-                    document.getElementById('begin-test-btn').click();
+                    if (this.beginTestBtn) this.beginTestBtn.click();
                 } else if (activeScreen.id === 'results-screen') {
                     e.preventDefault();
-                    document.getElementById('next-test-btn').click();
+                    if (this.nextTestBtn) this.nextTestBtn.click();
                 } else if (activeScreen.id === 'round-complete-screen') {
                     e.preventDefault();
-                    document.getElementById('round-complete-btn').click();
+                    if (this.roundCompleteBtn) this.roundCompleteBtn.click();
+                }
+            } else if (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3' || e.code === 'Digit4' ||
+                       e.code === 'Numpad1' || e.code === 'Numpad2' || e.code === 'Numpad3' || e.code === 'Numpad4') {
+                const activeScreen = document.querySelector('.screen.active');
+                if (activeScreen && activeScreen.id === 'clock-reading-screen') {
+                    e.preventDefault();
+                    const index = parseInt(e.key) - 1;
+                    const buttons = document.querySelectorAll('.clock-option-btn');
+                    if (buttons[index] && !buttons[index].disabled) {
+                        buttons[index].click();
+                    }
                 }
             }
         });
 
         // --- Mobile Touch Zones ---
         // Reaction tests (audio, visual, inhibitory control) — tap = spacebar
-        const reactionTouchZone = document.getElementById('reaction-touch-zone');
+        const reactionTouchZone = this.reactionTouchZone;
         if (reactionTouchZone) {
             reactionTouchZone.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -997,7 +628,7 @@ class GameManager {
         }
 
         // N-Back — tap = spacebar
-        const nbackTouchZone = document.getElementById('nback-touch-zone');
+        const nbackTouchZone = this.nbackTouchZone;
         if (nbackTouchZone) {
             nbackTouchZone.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -1009,8 +640,8 @@ class GameManager {
         }
 
         // Flanker — left/right tap zones = arrow keys
-        const flankerLeft = document.getElementById('flanker-touch-left');
-        const flankerRight = document.getElementById('flanker-touch-right');
+        const flankerLeft = this.flankerTouchLeft;
+        const flankerRight = this.flankerTouchRight;
         if (flankerLeft) {
             flankerLeft.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -1038,12 +669,20 @@ class GameManager {
 
     requestFullscreen() {
         const elem = document.documentElement;
-        if (elem.requestFullscreen) {
-            return elem.requestFullscreen();
-        } else if (elem.webkitRequestFullscreen) {
-            return elem.webkitRequestFullscreen();
-        } else if (elem.msRequestFullscreen) {
-            return elem.msRequestFullscreen();
+        try {
+            let res;
+            if (elem.requestFullscreen) {
+                res = elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                res = elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                res = elem.msRequestFullscreen();
+            }
+            if (res && typeof res.then === 'function') {
+                return res;
+            }
+        } catch (e) {
+            console.warn('Fullscreen request threw:', e);
         }
         return Promise.resolve();
     }
@@ -1087,18 +726,20 @@ class GameManager {
             titleHtml = `<span style="font-size: 0.8em; opacity: 0.6; display: block; margin-bottom: 0.5rem; letter-spacing: 1px;">ROUND ${currentRound} OF ${totalRounds}</span>${info.title}`;
         }
 
-        document.getElementById('inst-title').innerHTML = titleHtml;
-        document.getElementById('inst-desc').innerHTML = info.desc;
+        if (this.instTitle) this.instTitle.innerHTML = titleHtml;
+        if (this.instDesc) this.instDesc.innerHTML = info.desc;
 
         this.showScreen('instructions-screen');
 
         // Show and update progress bar during full assessment
-        const progressContainer = document.getElementById('progress-container');
-        if (!this.gameData.isIndividualTest) {
-            progressContainer.style.display = 'block';
-            this.updateProgressBar();
-        } else {
-            progressContainer.style.display = 'none';
+        const progressContainer = this.progressContainer;
+        if (progressContainer) {
+            if (!this.gameData.isIndividualTest) {
+                progressContainer.style.display = 'block';
+                this.updateProgressBar();
+            } else {
+                progressContainer.style.display = 'none';
+            }
         }
     }
 
@@ -1113,33 +754,34 @@ class GameManager {
         this.gameData.isWaiting = true;
         this.gameData.startTime = null;
 
-        if (testId === 'storyMemoryReading') {
+        if (testId.startsWith('story') && testId.endsWith('Reading')) {
+            const storyNum = parseInt(testId.replace('story', '').replace('Reading', ''));
+            const storyIndex = storyNum - 1;
+
             this.showScreen('story-reading-screen');
 
             // Show Progress Bar if Full Assessment
-            const progressContainer = document.getElementById('progress-container');
-            if (!this.gameData.isIndividualTest) {
-                progressContainer.style.display = 'block';
-                this.updateProgressBar();
-            } else {
-                progressContainer.style.display = 'none';
+            const progressContainer = this.progressContainer;
+            if (progressContainer) {
+                if (!this.gameData.isIndividualTest) {
+                    progressContainer.style.display = 'block';
+                    this.updateProgressBar();
+                } else {
+                    progressContainer.style.display = 'none';
+                }
             }
 
-            // Pop unique random story from queue, or fallback to random
-            if (this.gameData.selectedStoriesQueue && this.gameData.selectedStoriesQueue.length > 0) {
-                this.gameData.currentStory = this.gameData.selectedStoriesQueue.shift();
-            } else {
-                this.gameData.currentStory = this.stories[Math.floor(Math.random() * this.stories.length)];
-            }
-            document.getElementById('story-text').textContent = this.gameData.currentStory.text;
+            // Get pre-selected story or fallback
+            this.gameData.currentStory = (this.gameData.selectedStories && this.gameData.selectedStories[storyIndex]) || this.stories[0];
+            if (this.storyText) this.storyText.textContent = this.gameData.currentStory.text;
 
             let timeLeft = 30;
-            const timerDisplay = document.getElementById('story-timer');
-            timerDisplay.textContent = timeLeft;
+            const timerDisplay = this.storyTimer;
+            if (timerDisplay) timerDisplay.textContent = timeLeft;
 
             this.gameData.intervalId = setInterval(() => {
                 timeLeft--;
-                timerDisplay.textContent = timeLeft;
+                if (timerDisplay) timerDisplay.textContent = timeLeft;
                 if (timeLeft <= 0) {
                     clearInterval(this.gameData.intervalId);
                     this.state.scores[testId] = "Completed";
@@ -1150,51 +792,57 @@ class GameManager {
             return;
         }
 
-        if (testId === 'storyMemoryQuestions') {
+        if (testId.startsWith('story') && testId.includes('Recall')) {
             this.showScreen('story-question-screen');
             if (!this.gameData.isIndividualTest) this.updateProgressBar();
 
-            const container = document.getElementById('dynamic-questions-container');
-            const story = this.gameData.currentStory;
+            const container = this.dynamicQuestionsContainer;
+            
+            const parts = testId.replace('story', '').split('Recall');
+            const storyNum = parseInt(parts[0]);
+            const recallNum = parseInt(parts[1]);
 
-            // Randomly select 2 unique indices from the 5 questions
-            const indices = [0, 1, 2, 3, 4];
-            for (let i = indices.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [indices[i], indices[j]] = [indices[j], indices[i]];
+            const storyIndex = storyNum - 1;
+            const story = (this.gameData.selectedStories && this.gameData.selectedStories[storyIndex]) || this.stories[0];
+            this.gameData.currentStory = story;
+
+            // Get pre-assigned question
+            let question;
+            if (storyNum === 1 && this.gameData.story1Questions) {
+                question = this.gameData.story1Questions[recallNum - 1];
+            } else if (storyNum === 2 && this.gameData.story2Questions) {
+                question = this.gameData.story2Questions[recallNum - 1];
+            } else if (storyNum === 3 && this.gameData.story3Questions) {
+                question = this.gameData.story3Questions[recallNum - 1];
             }
-            const selectedIndices = indices.slice(0, 2);
-            this.gameData.currentQuestions = selectedIndices.map(i => story.questions[i]);
+            if (!question) question = story.questions[0];
 
-            // Shuffle options for each question while tracking correct answer
+            this.gameData.currentQuestions = [question];
+
+            // Shuffle options for the single question while tracking correct answer
             this.gameData.shuffledStoryAnswers = [];
-            for (let q = 0; q < 2; q++) {
-                const question = this.gameData.currentQuestions[q];
-                const correctIdx = parseInt(question.answer);
-                const indexed = question.options.map((opt, i) => ({ opt, isCorrect: i === correctIdx }));
-                for (let i = indexed.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
-                }
-                const newCorrectIdx = indexed.findIndex(item => item.isCorrect);
-                this.gameData.shuffledStoryAnswers.push(String(newCorrectIdx));
-
-                this.gameData.currentQuestions[q] = {
-                    ...question,
-                    shuffledOptions: indexed.map(item => item.opt)
-                };
+            const correctIdx = parseInt(question.answer);
+            const indexed = question.options.map((opt, i) => ({ opt, isCorrect: i === correctIdx }));
+            for (let i = indexed.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
             }
+            const newCorrectIdx = indexed.findIndex(item => item.isCorrect);
+            this.gameData.shuffledStoryAnswers.push(String(newCorrectIdx));
 
-            container.innerHTML = `
-                <h2 id="story-q1">${this.gameData.currentQuestions[0].prompt}</h2>
-                <div class="options">
-                    ${this.gameData.currentQuestions[0].shuffledOptions.map((opt, i) => `<label><input type="radio" name="q1" value="${i}"> ${opt}</label>`).join('')}
-                </div>
-                <h2 id="story-q2">${this.gameData.currentQuestions[1].prompt}</h2>
-                <div class="options">
-                    ${this.gameData.currentQuestions[1].shuffledOptions.map((opt, i) => `<label><input type="radio" name="q2" value="${i}"> ${opt}</label>`).join('')}
-                </div>
-            `;
+            this.gameData.currentQuestions[0] = {
+                ...question,
+                shuffledOptions: indexed.map(item => item.opt)
+            };
+
+            if (container) {
+                container.innerHTML = `
+                    <h2 id="story-q0">${this.gameData.currentQuestions[0].prompt}</h2>
+                    <div class="options">
+                        ${this.gameData.currentQuestions[0].shuffledOptions.map((opt, i) => `<label><input type="radio" name="q0" value="${i}"> ${opt}</label>`).join('')}
+                    </div>
+                `;
+            }
 
             // Add timer to questions screen
             let timeLeft = 30;
@@ -1205,7 +853,7 @@ class GameManager {
             timerEl.id = 'story-questions-timer';
             timerEl.className = 'timer';
             timerEl.textContent = timeLeft;
-            document.getElementById('story-question-screen').insertBefore(timerEl, document.getElementById('submit-story-btn'));
+            if (this.storyQuestionScreen) this.storyQuestionScreen.insertBefore(timerEl, this.submitStoryBtn);
 
             this.gameData.intervalId = setInterval(() => {
                 timeLeft--;
@@ -1221,29 +869,29 @@ class GameManager {
 
         if (testId === 'addressMemoryReading') {
             this.showScreen('address-reading-screen');
-            const progressContainer = document.getElementById('progress-container');
-            if (!this.gameData.isIndividualTest) {
-                progressContainer.style.display = 'block';
-                this.updateProgressBar();
-            } else {
-                progressContainer.style.display = 'none';
+            const progressContainer = this.progressContainer;
+            if (progressContainer) {
+                if (!this.gameData.isIndividualTest) {
+                    progressContainer.style.display = 'block';
+                    this.updateProgressBar();
+                } else {
+                    progressContainer.style.display = 'none';
+                }
             }
 
-            // Pop unique random address from queue, or fallback to random
-            if (this.gameData.selectedAddressesQueue && this.gameData.selectedAddressesQueue.length > 0) {
-                this.gameData.currentAddress = this.gameData.selectedAddressesQueue.shift();
-            } else {
+            // In assessment, address is pre-selected, otherwise fallback
+            if (!this.gameData.currentAddress) {
                 this.gameData.currentAddress = this.addresses[Math.floor(Math.random() * this.addresses.length)];
             }
-            document.getElementById('address-text-container').textContent = this.gameData.currentAddress.text;
+            if (this.addressTextContainer) this.addressTextContainer.textContent = this.gameData.currentAddress.text;
 
             let timeLeft = 15;
-            const timerDisplay = document.getElementById('address-timer');
-            timerDisplay.textContent = `${timeLeft}s`;
+            const timerDisplay = this.addressTimer;
+            if (timerDisplay) timerDisplay.textContent = `${timeLeft}s`;
 
             this.gameData.intervalId = setInterval(() => {
                 timeLeft--;
-                timerDisplay.textContent = `${timeLeft}s`;
+                if (timerDisplay) timerDisplay.textContent = `${timeLeft}s`;
                 if (timeLeft <= 0) {
                     clearInterval(this.gameData.intervalId);
                     this.state.scores[testId] = "Completed";
@@ -1258,8 +906,8 @@ class GameManager {
             this.showScreen('address-questions-screen');
             if (!this.gameData.isIndividualTest) this.updateProgressBar();
 
-            const container = document.getElementById('address-options-container');
-            const addressObj = this.gameData.currentAddress;
+            const container = this.addressOptionsContainer;
+            const addressObj = this.gameData.currentAddress || this.addresses[0];
 
             // Shuffle options while tracking the correct answer
             const correctIndex = parseInt(addressObj.answer);
@@ -1271,9 +919,11 @@ class GameManager {
             const newCorrectIndex = indexed.findIndex(item => item.isCorrect);
             this.gameData.shuffledAddressAnswer = String(newCorrectIndex);
 
-            container.innerHTML = `
-                ${indexed.map((item, i) => `<label><input type="radio" name="addressOption" value="${i}"> ${item.opt}</label>`).join('')}
-            `;
+            if (container) {
+                container.innerHTML = `
+                    ${indexed.map((item, i) => `<label><input type="radio" name="addressOption" value="${i}"> ${item.opt}</label>`).join('')}
+                `;
+            }
 
             let timeLeft = 30;
             const existingTimer = document.getElementById('address-questions-timer');
@@ -1284,7 +934,7 @@ class GameManager {
             timerEl.className = 'timer-display';
             timerEl.textContent = `${timeLeft}s`;
             // Insert before the submit button
-            document.getElementById('address-questions-screen').insertBefore(timerEl, document.getElementById('submit-address-btn'));
+            if (this.addressQuestionsScreen) this.addressQuestionsScreen.insertBefore(timerEl, this.submitAddressBtn);
 
             this.gameData.intervalId = setInterval(() => {
                 timeLeft--;
@@ -1377,6 +1027,13 @@ class GameManager {
             return;
         }
 
+        if (testId === 'clockReading') {
+            this.showScreen('clock-reading-screen');
+            if (!this.gameData.isIndividualTest) this.updateProgressBar();
+            this.startClockReading();
+            return;
+        }
+
         if (testId === 'nBackTask') {
             this.showScreen('nback-screen');
             if (!this.gameData.isIndividualTest) this.updateProgressBar();
@@ -1399,7 +1056,7 @@ class GameManager {
 
     startReactionTrial() {
         const testId = this.testSequence[this.currentTestIndex];
-        const prompt = document.getElementById('minigame-prompt');
+        const prompt = this.minigamePrompt;
 
         if (this.gameData.currentTrialCount >= 5) {
             this.endReactionTask();
@@ -1414,8 +1071,10 @@ class GameManager {
         if (testId === 'audioReaction') {
             this.appContainer.style.backgroundColor = '';
             document.body.style.backgroundColor = '';
-            prompt.innerHTML = `Wait for the sound...<br><span style="font-size: 1rem; opacity: 0.5;">Trial ${currentTrialDisplay}/5</span>`;
-            prompt.style.color = "rgba(255,255,255,0.7)";
+            if (prompt) {
+                prompt.innerHTML = `Wait for the sound...<br><span style="font-size: 1rem; opacity: 0.5;">Trial ${currentTrialDisplay}/5</span>`;
+                prompt.style.color = "rgba(255,255,255,0.7)";
+            }
 
             const delay = Math.random() * 4000 + 2000;
             this.gameData.timeoutId = setTimeout(() => {
@@ -1429,8 +1088,10 @@ class GameManager {
         else if (testId === 'visualReaction') {
             this.appContainer.style.backgroundColor = '#cc3333';
             document.body.style.backgroundColor = '#cc3333';
-            prompt.innerHTML = `Wait for green...<br><span style="font-size: 1rem; opacity: 0.5;">Trial ${currentTrialDisplay}/5</span>`;
-            prompt.style.color = "rgba(255,255,255,0.7)";
+            if (prompt) {
+                prompt.innerHTML = `Wait for green...<br><span style="font-size: 1rem; opacity: 0.5;">Trial ${currentTrialDisplay}/5</span>`;
+                prompt.style.color = "rgba(255,255,255,0.7)";
+            }
 
             const delay = Math.random() * 4000 + 2000;
             this.gameData.timeoutId = setTimeout(() => {
@@ -1438,8 +1099,10 @@ class GameManager {
 
                 this.appContainer.style.backgroundColor = '#33cc33';
                 document.body.style.backgroundColor = '#33cc33';
-                prompt.textContent = this.isTouchDevice() ? "TAP NOW!" : "PRESS SPACEBAR!";
-                prompt.style.color = "#ffffff";
+                if (prompt) {
+                    prompt.textContent = this.isTouchDevice() ? "TAP NOW!" : "PRESS SPACEBAR!";
+                    prompt.style.color = "#ffffff";
+                }
 
                 this.gameData.startTime = performance.now();
                 this.gameData.isWaiting = false;
@@ -1448,8 +1111,10 @@ class GameManager {
         else if (testId === 'inhibitoryControl') {
             this.appContainer.style.backgroundColor = '#cc3333';
             document.body.style.backgroundColor = '#cc3333';
-            prompt.innerHTML = `Wait for green. Ignore the beep.<br><span style="font-size: 1rem; opacity: 0.5;">Trial ${currentTrialDisplay}/5</span>`;
-            prompt.style.color = "rgba(255,255,255,0.7)";
+            if (prompt) {
+                prompt.innerHTML = `Wait for green. Ignore the beep.<br><span style="font-size: 1rem; opacity: 0.5;">Trial ${currentTrialDisplay}/5</span>`;
+                prompt.style.color = "rgba(255,255,255,0.7)";
+            }
 
             const delay = Math.random() * 4000 + 2000;
 
@@ -1465,8 +1130,10 @@ class GameManager {
 
                 this.appContainer.style.backgroundColor = '#33cc33';
                 document.body.style.backgroundColor = '#33cc33';
-                prompt.textContent = this.isTouchDevice() ? "TAP NOW!" : "PRESS SPACEBAR!";
-                prompt.style.color = "#ffffff";
+                if (prompt) {
+                    prompt.textContent = this.isTouchDevice() ? "TAP NOW!" : "PRESS SPACEBAR!";
+                    prompt.style.color = "#ffffff";
+                }
 
                 this.gameData.startTime = performance.now();
                 this.gameData.isWaiting = false;
@@ -1479,10 +1146,14 @@ class GameManager {
         this.gameData.mathCurrentRound++;
         const isMental = this.gameData.mathType === 'mental';
 
-        const inputEl = document.getElementById('math-input');
-        inputEl.value = '';
-        setTimeout(() => inputEl.focus(), 50);
-        document.getElementById('math-progress').textContent = `Question ${this.gameData.mathCurrentRound} of ${this.gameData.mathRounds}`;
+        const inputEl = this.mathInput;
+        if (inputEl) {
+            inputEl.value = '';
+            setTimeout(() => inputEl.focus(), 50);
+        }
+        if (this.mathProgress) {
+            this.mathProgress.textContent = `Question ${this.gameData.mathCurrentRound} of ${this.gameData.mathRounds}`;
+        }
 
         if (isMental) {
             // Generate Mental Math (+, -, *, /)
@@ -1514,26 +1185,26 @@ class GameManager {
                 ans = ansTemp;
             }
 
-            document.getElementById('math-question').textContent = qText;
+            if (this.mathQuestion) this.mathQuestion.textContent = qText;
             this.gameData.currentMathAnswer = ans;
             this.gameData.currentMathQuestion = qText;
         } else {
             // Story Math
             const templateIndex = this.gameData.selectedMathTemplates[this.gameData.mathCurrentRound - 1];
             const problem = this.storyMathTemplates[templateIndex]();
-            document.getElementById('math-question').textContent = problem.text;
+            if (this.mathQuestion) this.mathQuestion.textContent = problem.text;
             this.gameData.currentMathAnswer = problem.answer;
             this.gameData.currentMathQuestion = problem.text;
         }
 
         let timeLeft = isMental ? 20 : 60;
-        const timerDisplay = document.getElementById('math-timer');
-        timerDisplay.textContent = timeLeft;
+        const timerDisplay = this.mathTimer;
+        if (timerDisplay) timerDisplay.textContent = timeLeft;
 
         clearInterval(this.gameData.intervalId);
         this.gameData.intervalId = setInterval(() => {
             timeLeft--;
-            timerDisplay.textContent = timeLeft;
+            if (timerDisplay) timerDisplay.textContent = timeLeft;
             if (timeLeft <= 0) {
                 clearInterval(this.gameData.intervalId);
                 this.handleMathSubmit(true);
@@ -1544,7 +1215,8 @@ class GameManager {
     handleMathSubmit(isTimeout = false) {
         clearInterval(this.gameData.intervalId);
 
-        const inputVal = document.getElementById('math-input').value;
+        const inputEl = this.mathInput;
+        const inputVal = inputEl ? inputEl.value : '';
         const parsed = parseInt(inputVal, 10);
         const isCorrect = !isTimeout && !isNaN(parsed) && parsed === this.gameData.currentMathAnswer;
 
@@ -1578,13 +1250,15 @@ class GameManager {
                 wrongAnswersHTML
             });
 
-            const scoreDisplay = document.getElementById('round-score');
+            const scoreDisplay = this.roundScore;
             let html = `Score: <br><span style="color: var(--accent-color); font-size: 3rem;">${this.gameData.mathScore}/${this.gameData.mathRounds}</span><br><span style="font-size: 1.2rem;">Correct Answers</span>`;
             if (wrongAnswersHTML) {
                 html += wrongAnswersHTML;
             }
-            scoreDisplay.innerHTML = html;
-            scoreDisplay.style.color = "var(--text-color)";
+            if (scoreDisplay) {
+                scoreDisplay.innerHTML = html;
+                scoreDisplay.style.color = "var(--text-color)";
+            }
 
             this.proceedAfterTest();
         }
@@ -1613,31 +1287,34 @@ class GameManager {
     // --- Story Memory Methods ---
     handleStorySubmit() {
         clearInterval(this.gameData.intervalId);
-        const q1 = document.querySelector('input[name="q1"]:checked');
-        const q2 = document.querySelector('input[name="q2"]:checked');
         const questions = this.gameData.currentQuestions;
         const answers = this.gameData.shuffledStoryAnswers;
 
         let score = 0;
-        const q1Correct = q1 && q1.value === answers[0];
-        const q2Correct = q2 && q2.value === answers[1];
-        if (q1Correct) score++;
-        if (q2Correct) score++;
+        const correctFlags = [];
+        questions.forEach((q, idx) => {
+            const selected = document.querySelector(`input[name="q${idx}"]:checked`);
+            const isCorrect = selected && selected.value === answers[idx];
+            if (isCorrect) score++;
+            correctFlags.push(isCorrect);
+        });
 
-        if (!this.state.scores['storyMemoryQuestions']) this.state.scores['storyMemoryQuestions'] = [];
-        this.state.scores['storyMemoryQuestions'].push(`${score}/2`);
+        const activeTestId = this.testSequence[this.currentTestIndex];
+        if (!this.state.scores[activeTestId]) this.state.scores[activeTestId] = [];
+        this.state.scores[activeTestId].push(`${score}/${questions.length}`);
 
-        const correctAns1 = questions[0].shuffledOptions[parseInt(answers[0])];
-        const correctAns2 = questions[1].shuffledOptions[parseInt(answers[1])];
-
-        const scoreDisplay = document.getElementById('round-score');
-        let html = `<div style="font-size: 1.5rem; margin-bottom: 1rem;">You got ${score} out of 2 correct.</div>`;
-        html += `<div style="text-align: left; max-width: 500px; margin: 0 auto; font-size: 0.95rem; line-height: 1.8;">`;
-        html += `<div style="margin-bottom: 0.5rem;">${q1Correct ? '✅' : '❌'} <strong>${questions[0].prompt}</strong><br>Correct: <span style="color: var(--accent-color);">${correctAns1}</span></div>`;
-        html += `<div>${q2Correct ? '✅' : '❌'} <strong>${questions[1].prompt}</strong><br>Correct: <span style="color: var(--accent-color);">${correctAns2}</span></div>`;
-        html += `</div>`;
-        scoreDisplay.innerHTML = html;
-        scoreDisplay.style.color = "var(--text-color)";
+        const scoreDisplay = this.roundScore;
+        if (scoreDisplay) {
+            let html = `<div style="font-size: 1.5rem; margin-bottom: 1rem;">You got ${score} out of ${questions.length} correct.</div>`;
+            html += `<div style="text-align: left; max-width: 500px; margin: 0 auto; font-size: 0.95rem; line-height: 1.8;">`;
+            questions.forEach((q, idx) => {
+                const correctAns = q.shuffledOptions[parseInt(answers[idx])];
+                html += `<div style="margin-bottom: 0.5rem;">${correctFlags[idx] ? '✅' : '❌'} <strong>${q.prompt}</strong><br>Correct: <span style="color: var(--accent-color);">${correctAns}</span></div>`;
+            });
+            html += `</div>`;
+            scoreDisplay.innerHTML = html;
+            scoreDisplay.style.color = "var(--text-color)";
+        }
 
         this.proceedAfterTest();
     }
@@ -1653,7 +1330,7 @@ class GameManager {
         this.state.scores['addressMemoryQuestions'].push(`${score}/1`);
 
         const correctAddress = this.gameData.currentAddress.text;
-        const scoreDisplay = document.getElementById('round-score');
+        const scoreDisplay = this.roundScore;
         let html = `<div style="font-size: 1.5rem; margin-bottom: 1rem;">${score === 1 ? '✅ Correct!' : '❌ Incorrect'}</div>`;
         html += `<div style="font-size: 0.95rem;">Correct address: <span style="color: var(--accent-color);">${correctAddress}</span></div>`;
         scoreDisplay.innerHTML = html;
@@ -1664,10 +1341,10 @@ class GameManager {
 
     // --- Spatial Memory Grid Methods ---
     setupGridUI() {
-        const grid = document.getElementById('memory-grid');
-        const submitBtn = document.getElementById('submit-grid-btn');
-        grid.innerHTML = '';
-        submitBtn.style.visibility = 'hidden';
+        const grid = this.memoryGrid;
+        const submitBtn = this.submitGridBtn;
+        if (grid) grid.innerHTML = '';
+        if (submitBtn) submitBtn.style.visibility = 'hidden';
 
         this.gameData.gridCells = [];
         this.gameData.gridSequence = [];
@@ -1677,9 +1354,9 @@ class GameManager {
         const numCells = isSimultaneous ? 25 : 16;
 
         if (isSimultaneous) {
-            grid.classList.add('grid-5x5');
+            if (grid) grid.classList.add('grid-5x5');
         } else {
-            grid.classList.remove('grid-5x5');
+            if (grid) grid.classList.remove('grid-5x5');
         }
 
         // Create blocks
@@ -1689,7 +1366,7 @@ class GameManager {
             cell.dataset.index = i;
             // Depending on test, click handlers differ slightly in visual feedback
             cell.addEventListener('click', () => this.handleGridClick(i, cell));
-            grid.appendChild(cell);
+            if (grid) grid.appendChild(cell);
             this.gameData.gridCells.push(cell);
         }
     }
@@ -1725,7 +1402,7 @@ class GameManager {
                 setTimeout(() => {
                     this.gameData.gridCells.forEach(c => c.classList.remove('active'));
                     this.gameData.isWaiting = false; // Allow clicks
-                    document.getElementById('submit-grid-btn').style.visibility = 'visible';
+                    if (this.submitGridBtn) this.submitGridBtn.style.visibility = 'visible';
                     this.updateGridSubmitButton();
 
                     // Add 20s timeout
@@ -1761,7 +1438,7 @@ class GameManager {
         this.gameData.timeoutId = setTimeout(() => {
             this.gameData.gridCells.forEach(c => c.classList.remove('active'));
             this.gameData.isWaiting = false; // Allow clicks
-            document.getElementById('submit-grid-btn').style.visibility = 'visible';
+            if (this.submitGridBtn) this.submitGridBtn.style.visibility = 'visible';
             this.updateGridSubmitButton();
 
             // Add 20s timeout
@@ -1802,26 +1479,47 @@ class GameManager {
             if (this.gameData.userGridSequence.length >= this.gameData.gridSequence.length) {
                 return;
             }
+            const isSimultaneous = this.testSequence && this.testSequence[this.currentTestIndex] === 'simultaneousSpatialMemory';
 
-            cell.classList.add('selected');
-            this.gameData.userGridSequence.push(index);
+            // Simultaneous toggle click / Sequential push click
+            if (isSimultaneous) {
+                const userIndex = this.gameData.userGridSequence.indexOf(index);
+                if (userIndex !== -1) {
+                    // Deselect
+                    this.gameData.userGridSequence.splice(userIndex, 1);
+                    cell.classList.remove('selected');
+                    this.playBeep(450, 0.05);
+                } else {
+                    // Select
+                    this.gameData.userGridSequence.push(index);
+                    cell.classList.add('selected');
+                    this.playBeep(550, 0.05);
+                }
+                this.updateGridSubmitButton();
+            } else {
+                // Sequential click validation
+                // Add click visual feedback and add to user sequence
+                this.gameData.userGridSequence.push(index);
+                cell.classList.add('selected');
 
-            if (testId === 'visualSpatialMemory') {
-                // Sequential visually numbers choices
+                // Render order number on it
                 cell.textContent = this.gameData.userGridSequence.length;
                 cell.style.display = 'flex';
                 cell.style.alignItems = 'center';
                 cell.style.justifyContent = 'center';
                 cell.style.fontSize = '2rem';
                 cell.style.fontWeight = 'bold';
+
+                const step = this.gameData.userGridSequence.length - 1;
+                this.playBeep(500 + (step * 50), 0.08);
+
+                this.updateGridSubmitButton();
             }
-            // Simultaneous just highlights them without numbering
         }
-        this.updateGridSubmitButton();
     }
 
     updateGridSubmitButton() {
-        const btn = document.getElementById('submit-grid-btn');
+        const btn = this.submitGridBtn;
         if (!btn || btn.style.visibility === 'hidden') return;
         const selected = this.gameData.userGridSequence.length;
         const required = this.gameData.gridSequence.length;
@@ -1852,9 +1550,11 @@ class GameManager {
             if (!this.state.scores['visualSpatialMemory']) this.state.scores['visualSpatialMemory'] = [];
             this.state.scores['visualSpatialMemory'].push(`Average: ${avgPct}%`);
 
-            const scoreDisplay = document.getElementById('round-score');
-            scoreDisplay.innerHTML = `Average Score:<br><span style="color: var(--accent-color); font-size: 3rem;">${avgPct}%</span> selected in correct order.`;
-            scoreDisplay.style.color = "var(--text-color)";
+            const scoreDisplay = this.roundScore;
+            if (scoreDisplay) {
+                scoreDisplay.innerHTML = `Average Score:<br><span style="color: var(--accent-color); font-size: 3rem;">${avgPct}%</span> selected in correct order.`;
+                scoreDisplay.style.color = "var(--text-color)";
+            }
             this.proceedAfterTest();
         } else {
             setTimeout(() => this.startSpatialMemoryGridSequential(), 500);
@@ -1887,9 +1587,11 @@ class GameManager {
             if (!this.state.scores['simultaneousSpatialMemory']) this.state.scores['simultaneousSpatialMemory'] = [];
             this.state.scores['simultaneousSpatialMemory'].push(`Average: ${avgPct}%`);
 
-            const scoreDisplay = document.getElementById('round-score');
-            scoreDisplay.innerHTML = `Average Score:<br><span style="color: var(--accent-color); font-size: 3rem;">${avgPct}%</span> correctly identified.`;
-            scoreDisplay.style.color = "var(--text-color)";
+            const scoreDisplay = this.roundScore;
+            if (scoreDisplay) {
+                scoreDisplay.innerHTML = `Average Score:<br><span style="color: var(--accent-color); font-size: 3rem;">${avgPct}%</span> correctly identified.`;
+                scoreDisplay.style.color = "var(--text-color)";
+            }
 
             this.proceedAfterTest();
         }
@@ -1902,7 +1604,7 @@ class GameManager {
     startChimpTest() {
         this.setupGridUI();
         // Force 4x4 grid
-        document.getElementById('memory-grid').classList.remove('grid-5x5');
+        if (this.memoryGrid) this.memoryGrid.classList.remove('grid-5x5');
 
         this.gameData.chimpMistakes = 0;
         this.gameData.chimpNextExpected = 1;
@@ -1936,7 +1638,7 @@ class GameManager {
 
         // Update prompt
         document.querySelector('#grid-memory-screen h2').textContent = `Chimp Test — Trial ${this.gameData.currentTrialCount + 1} of 5`;
-        document.getElementById('submit-grid-btn').style.visibility = 'hidden';
+        if (this.submitGridBtn) this.submitGridBtn.style.visibility = 'hidden';
 
         this.gameData.isWaiting = false; // Allow clicks immediately
         this.gameData.chimpFirstClick = false;
@@ -2015,9 +1717,11 @@ class GameManager {
             if (!this.state.scores['chimpTest']) this.state.scores['chimpTest'] = [];
             this.state.scores['chimpTest'].push(`Average Mistakes: ${avgMistakes}`);
 
-            const scoreDisplay = document.getElementById('round-score');
-            scoreDisplay.innerHTML = `Average Mistakes:<br><span style="color: var(--accent-color); font-size: 4rem;">${avgMistakes}</span><br>across 5 trials.`;
-            scoreDisplay.style.color = "var(--text-color)";
+            const scoreDisplay = this.roundScore;
+            if (scoreDisplay) {
+                scoreDisplay.innerHTML = `Average Mistakes:<br><span style="color: var(--accent-color); font-size: 4rem;">${avgMistakes}</span><br>across 5 trials.`;
+                scoreDisplay.style.color = "var(--text-color)";
+            }
 
             this.proceedAfterTest();
         } else {
@@ -2025,18 +1729,20 @@ class GameManager {
         }
     }
 
-    // --- Sequential Number Memory ---
-    startSequentialNumberMemory() {
-        const display = document.getElementById('number-display');
-        const inputContainer = document.getElementById('number-input-container');
-        const input = document.getElementById('number-input');
-        const prompt = document.getElementById('number-prompt');
+    // --- Sequential & Reverse Number Memory ---
+    startNumberMemory(isReverse) {
+        const display = this.numberDisplay;
+        const inputContainer = this.numberInputContainer;
+        const input = this.numberInput;
+        const prompt = this.numberPrompt;
 
-        display.textContent = "";
-        display.style.display = "flex";
-        inputContainer.style.display = "none";
-        input.value = "";
-        prompt.textContent = "Remember the sequence...";
+        if (display) {
+            display.textContent = "";
+            display.style.display = "flex";
+        }
+        if (inputContainer) inputContainer.style.display = "none";
+        if (input) input.value = "";
+        if (prompt) prompt.textContent = "Remember the sequence...";
 
         // Generate 9 random digits
         this.gameData.numberSequence = [];
@@ -2048,24 +1754,24 @@ class GameManager {
 
         const flashNextNumber = () => {
             if (step < this.gameData.numberSequence.length) {
-                display.textContent = this.gameData.numberSequence[step];
+                if (display) display.textContent = this.gameData.numberSequence[step];
 
                 setTimeout(() => {
-                    display.textContent = "";
+                    if (display) display.textContent = "";
                     step++;
                     setTimeout(flashNextNumber, 500); // 0.5s off
                 }, 1000); // 1s on
             } else {
                 // Done flashing
-                display.style.display = "none";
-                inputContainer.style.display = "flex";
-                prompt.textContent = "Type the sequence (30s):";
-                input.focus();
+                if (display) display.style.display = "none";
+                if (inputContainer) inputContainer.style.display = "flex";
+                if (prompt) prompt.textContent = isReverse ? "Type the sequence in REVERSE (30s):" : "Type the sequence (30s):";
+                if (input) input.focus();
 
                 // Add 30s timeout (clear the flash timeout first)
                 clearTimeout(this.gameData.timeoutId);
                 this.gameData.timeoutId = setTimeout(() => {
-                    this.handleNumberSubmit();
+                    this.handleNumberSubmitCommon(isReverse);
                 }, 30000);
             }
         };
@@ -2074,126 +1780,64 @@ class GameManager {
         this.gameData.timeoutId = setTimeout(flashNextNumber, 1000);
     }
 
-    handleNumberSubmit() {
+    startSequentialNumberMemory() {
+        this.startNumberMemory(false);
+    }
+
+    startReverseSequentialNumberMemory() {
+        this.startNumberMemory(true);
+    }
+
+    handleNumberSubmitCommon(isReverse) {
         clearTimeout(this.gameData.timeoutId);
-        const input = document.getElementById('number-input');
-        const userSeqStr = input.value.trim();
+        const input = this.numberInput;
+        const userSeqStr = input ? input.value.trim() : "";
         const actualSeqStr = this.gameData.numberSequence.join("");
+        const targetSeqStr = isReverse ? actualSeqStr.split("").reverse().join("") : actualSeqStr;
 
         // Count how many matched in order
         let correctCount = 0;
-        const minLen = Math.min(userSeqStr.length, actualSeqStr.length);
+        const minLen = Math.min(userSeqStr.length, targetSeqStr.length);
         for (let i = 0; i < minLen; i++) {
-            if (userSeqStr[i] === actualSeqStr[i]) correctCount++;
+            if (userSeqStr[i] === targetSeqStr[i]) correctCount++;
         }
 
         this.gameData.trialScores.push(correctCount);
-        this.gameData.trialDetails.push({ expected: actualSeqStr, answered: userSeqStr });
+        this.gameData.trialDetails.push({ expected: targetSeqStr, answered: userSeqStr });
         this.gameData.currentTrialCount++;
+
+        const key = isReverse ? 'reverseSequentialNumberMemory' : 'sequentialNumberMemory';
+        const label = isReverse ? "Reverse Numbers" : "Sequential Numbers";
 
         if (this.gameData.currentTrialCount >= 5) {
             const sumCount = this.gameData.trialScores.reduce((a, b) => a + b, 0);
             const avgCount = (sumCount / 5).toFixed(1);
 
-            if (!this.state.scores['sequentialNumberMemory']) this.state.scores['sequentialNumberMemory'] = [];
-            this.state.scores['sequentialNumberMemory'].push(`Average: ${avgCount}/9 Digits`);
+            if (!this.state.scores[key]) this.state.scores[key] = [];
+            this.state.scores[key].push(`Average: ${avgCount}/9 Digits`);
 
-            const breakdownHTML = this.generateNumberBreakdownHTML(avgCount, "Sequential Numbers");
-            if (!this.state.breakdowns['sequentialNumberMemory']) this.state.breakdowns['sequentialNumberMemory'] = [];
-            this.state.breakdowns['sequentialNumberMemory'].push(breakdownHTML);
+            const breakdownHTML = this.generateNumberBreakdownHTML(avgCount, label);
+            if (!this.state.breakdowns[key]) this.state.breakdowns[key] = [];
+            this.state.breakdowns[key].push(breakdownHTML);
 
-            const scoreDisplay = document.getElementById('round-score');
-            scoreDisplay.innerHTML = breakdownHTML;
-            scoreDisplay.style.color = "var(--text-color)";
+            const scoreDisplay = this.roundScore;
+            if (scoreDisplay) {
+                scoreDisplay.innerHTML = breakdownHTML;
+                scoreDisplay.style.color = "var(--text-color)";
+            }
             this.proceedAfterTest();
         } else {
             // Next trial
-            setTimeout(() => this.startSequentialNumberMemory(), 500);
+            setTimeout(() => this.startNumberMemory(isReverse), 500);
         }
     }
 
-    // --- Reverse Sequential Number Memory ---
-    startReverseSequentialNumberMemory() {
-        const display = document.getElementById('number-display');
-        const inputContainer = document.getElementById('number-input-container');
-        const input = document.getElementById('number-input');
-        const prompt = document.getElementById('number-prompt');
-
-        display.textContent = "";
-        display.style.display = "flex";
-        inputContainer.style.display = "none";
-        input.value = "";
-        prompt.textContent = "Remember the sequence...";
-
-        // Generate 9 random digits
-        this.gameData.numberSequence = [];
-        for (let i = 0; i < 9; i++) {
-            this.gameData.numberSequence.push(Math.floor(Math.random() * 10));
-        }
-
-        let step = 0;
-
-        const flashNextNumber = () => {
-            if (step < this.gameData.numberSequence.length) {
-                display.textContent = this.gameData.numberSequence[step];
-
-                setTimeout(() => {
-                    display.textContent = "";
-                    step++;
-                    setTimeout(flashNextNumber, 500);
-                }, 1000);
-            } else {
-                display.style.display = "none";
-                inputContainer.style.display = "flex";
-                prompt.textContent = "Type the sequence in REVERSE (30s):";
-                input.focus();
-
-                // Add 30s timeout (clear the flash timeout first)
-                clearTimeout(this.gameData.timeoutId);
-                this.gameData.timeoutId = setTimeout(() => {
-                    this.handleReverseNumberSubmit();
-                }, 30000);
-            }
-        };
-
-        this.gameData.timeoutId = setTimeout(flashNextNumber, 1000);
+    handleNumberSubmit() {
+        this.handleNumberSubmitCommon(false);
     }
 
     handleReverseNumberSubmit() {
-        clearTimeout(this.gameData.timeoutId);
-        const input = document.getElementById('number-input');
-        const userSeqStr = input.value.trim();
-        const actualSeqStr = this.gameData.numberSequence.join("");
-        const reversedSeqStr = actualSeqStr.split("").reverse().join("");
-
-        let correctCount = 0;
-        const minLen = Math.min(userSeqStr.length, reversedSeqStr.length);
-        for (let i = 0; i < minLen; i++) {
-            if (userSeqStr[i] === reversedSeqStr[i]) correctCount++;
-        }
-
-        this.gameData.trialScores.push(correctCount);
-        this.gameData.trialDetails.push({ expected: reversedSeqStr, answered: userSeqStr });
-        this.gameData.currentTrialCount++;
-
-        if (this.gameData.currentTrialCount >= 5) {
-            const sumCount = this.gameData.trialScores.reduce((a, b) => a + b, 0);
-            const avgCount = (sumCount / 5).toFixed(1);
-
-            if (!this.state.scores['reverseSequentialNumberMemory']) this.state.scores['reverseSequentialNumberMemory'] = [];
-            this.state.scores['reverseSequentialNumberMemory'].push(`Average: ${avgCount}/9 Digits`);
-
-            const breakdownHTML = this.generateNumberBreakdownHTML(avgCount, "Reverse Numbers");
-            if (!this.state.breakdowns['reverseSequentialNumberMemory']) this.state.breakdowns['reverseSequentialNumberMemory'] = [];
-            this.state.breakdowns['reverseSequentialNumberMemory'].push(breakdownHTML);
-
-            const scoreDisplay = document.getElementById('round-score');
-            scoreDisplay.innerHTML = breakdownHTML;
-            scoreDisplay.style.color = "var(--text-color)";
-            this.proceedAfterTest();
-        } else {
-            setTimeout(() => this.startReverseSequentialNumberMemory(), 500);
-        }
+        this.handleNumberSubmitCommon(true);
     }
 
     generateNumberBreakdownHTML(avgCount, testName) {
@@ -2234,12 +1878,14 @@ class GameManager {
 
     // --- N-Back Task ---
     startNBackTask() {
-        const display = document.getElementById('nback-letter-display');
-        const feedback = document.getElementById('nback-feedback');
+        const display = this.nbackLetterDisplay;
+        const feedback = this.nbackFeedback;
 
-        display.textContent = "";
-        feedback.textContent = "";
-        feedback.className = "nback-feedback";
+        if (display) display.textContent = "";
+        if (feedback) {
+            feedback.textContent = "";
+            feedback.className = "nback-feedback";
+        }
 
         // Generate 25 letters sequence with ~30% chance for a 2-back match
         const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -2265,7 +1911,7 @@ class GameManager {
 
         // Add progress counter
         const h2 = document.querySelector('#nback-screen h2');
-        h2.textContent = `${this.isTouchDevice() ? 'Tap' : 'Press Spacebar'} if letter matches the one from 2 steps ago. (1/25)`;
+        if (h2) h2.textContent = `${this.isTouchDevice() ? 'Tap' : 'Press Spacebar'} if letter matches the one from 2 steps ago. (1/25)`;
 
         const showNextLetter = () => {
             if (this.gameData.nBackCurrentIndex >= this.gameData.nBackSequence.length) {
@@ -2273,15 +1919,17 @@ class GameManager {
                 return;
             }
 
-            feedback.textContent = "";
-            feedback.className = "nback-feedback";
+            if (feedback) {
+                feedback.textContent = "";
+                feedback.className = "nback-feedback";
+            }
 
             const idx = this.gameData.nBackCurrentIndex;
             const char = this.gameData.nBackSequence[idx];
-            display.textContent = char;
+            if (display) display.textContent = char;
 
             // Update counter
-            document.querySelector('#nback-screen h2').textContent = `${this.isTouchDevice() ? 'Tap' : 'Press Spacebar'} if letter matches the one from 2 steps ago. (${idx + 1}/25)`;
+            if (h2) h2.textContent = `${this.isTouchDevice() ? 'Tap' : 'Press Spacebar'} if letter matches the one from 2 steps ago. (${idx + 1}/25)`;
 
             // Determine if it is a target
             this.gameData.nBackCurrentTarget = (idx >= 2 && this.gameData.nBackSequence[idx] === this.gameData.nBackSequence[idx - 2]);
@@ -2289,7 +1937,7 @@ class GameManager {
 
             // Keep on screen for 1 second, then clear for 0.5s before next
             this.gameData.timeoutId = setTimeout(() => {
-                display.textContent = "";
+                if (display) display.textContent = "";
 
                 // If they missed a target
                 if (this.gameData.nBackCurrentTarget && this.gameData.nBackCanPress) {
@@ -2311,32 +1959,36 @@ class GameManager {
         if (!this.gameData.nBackCanPress) return;
         this.gameData.nBackCanPress = false; // Lock out further presses this step
 
-        const feedback = document.getElementById('nback-feedback');
+        const feedback = this.nbackFeedback;
 
-        if (this.gameData.nBackCurrentTarget) {
-            this.gameData.nBackHits++;
-            feedback.textContent = "Hit!";
-            feedback.style.color = "var(--accent-color)";
-        } else {
-            this.gameData.nBackFalseAlarms++;
-            feedback.textContent = "False Alarm!";
-            feedback.style.color = "#cc3333";
+        if (feedback) {
+            if (this.gameData.nBackCurrentTarget) {
+                this.gameData.nBackHits++;
+                feedback.textContent = "Hit!";
+                feedback.style.color = "var(--accent-color)";
+            } else {
+                this.gameData.nBackFalseAlarms++;
+                feedback.textContent = "False Alarm!";
+                feedback.style.color = "#cc3333";
+            }
         }
     }
 
     endNBackTask() {
-        const scoreDisplay = document.getElementById('round-score');
+        const scoreDisplay = this.roundScore;
 
         // Calculate score
         if (!this.state.scores['nBackTask']) this.state.scores['nBackTask'] = [];
         this.state.scores['nBackTask'].push(`Hits: ${this.gameData.nBackHits}, False Alarms: ${this.gameData.nBackFalseAlarms}, Misses: ${this.gameData.nBackMisses}`);
 
-        scoreDisplay.innerHTML = `
-            Hits: <span style="color: var(--accent-color); font-size: 2rem;">${this.gameData.nBackHits}</span><br>
-            False Alarms: <span style="color: #cc3333; font-size: 2rem;">${this.gameData.nBackFalseAlarms}</span><br>
-            Misses: <span style="color: #cc3333; font-size: 2rem;">${this.gameData.nBackMisses}</span>
-        `;
-        scoreDisplay.style.color = "var(--text-color)";
+        if (scoreDisplay) {
+            scoreDisplay.innerHTML = `
+                Hits: <span style="color: var(--accent-color); font-size: 2rem;">${this.gameData.nBackHits}</span><br>
+                False Alarms: <span style="color: #cc3333; font-size: 2rem;">${this.gameData.nBackFalseAlarms}</span><br>
+                Misses: <span style="color: #cc3333; font-size: 2rem;">${this.gameData.nBackMisses}</span>
+            `;
+            scoreDisplay.style.color = "var(--text-color)";
+        }
 
         this.proceedAfterTest();
     }
@@ -2348,16 +2000,18 @@ class GameManager {
             return;
         }
 
-        const arrowDiv = document.getElementById('flanker-arrows');
-        const feedbackDiv = document.getElementById('flanker-feedback');
+        const arrowDiv = this.flankerArrows;
+        const feedbackDiv = this.flankerFeedback;
 
-        arrowDiv.textContent = "";
+        if (arrowDiv) arrowDiv.textContent = "";
 
         const delay = Math.random() * 1000 + 1000;
 
         this.gameData.timeoutId = setTimeout(() => {
-            feedbackDiv.textContent = "";
-            feedbackDiv.className = "flanker-feedback";
+            if (feedbackDiv) {
+                feedbackDiv.textContent = "";
+                feedbackDiv.className = "flanker-feedback";
+            }
 
             const matchMiddle = Math.random() > 0.5;
             const midDir = Math.random() > 0.5 ? 'Right' : 'Left';
@@ -2370,7 +2024,7 @@ class GameManager {
             const displayStr = `${flankStr}${flankStr}${middleStr}${flankStr}${flankStr}`;
 
             this.gameData.flankerCurrentDirection = midDir;
-            arrowDiv.textContent = displayStr;
+            if (arrowDiv) arrowDiv.textContent = displayStr;
 
             this.gameData.startTime = performance.now();
             this.gameData.flankerCanPress = true;
@@ -2385,26 +2039,28 @@ class GameManager {
         const userDirection = keyCode === 'ArrowRight' ? 'Right' : 'Left';
         const isCorrect = userDirection === this.gameData.flankerCurrentDirection;
 
-        const feedbackDiv = document.getElementById('flanker-feedback');
+        const feedbackDiv = this.flankerFeedback;
 
-        if (isCorrect) {
-            feedbackDiv.textContent = `Correct! (${reactionTime} ms)`;
-            feedbackDiv.className = "flanker-feedback correct";
-            this.gameData.flankerTimes.push(reactionTime);
-        } else {
-            feedbackDiv.textContent = `Wrong! (${reactionTime} ms)`;
-            feedbackDiv.className = "flanker-feedback wrong";
-            this.gameData.flankerErrors++;
-            this.gameData.flankerTimes.push(reactionTime + 500);
+        if (feedbackDiv) {
+            if (isCorrect) {
+                feedbackDiv.textContent = `Correct! (${reactionTime} ms)`;
+                feedbackDiv.className = "flanker-feedback correct";
+                this.gameData.flankerTimes.push(reactionTime);
+            } else {
+                feedbackDiv.textContent = `Wrong! (${reactionTime} ms)`;
+                feedbackDiv.className = "flanker-feedback wrong";
+                this.gameData.flankerErrors++;
+                this.gameData.flankerTimes.push(reactionTime + 500);
+            }
         }
 
-        const arrowDiv = document.getElementById('flanker-arrows');
-        arrowDiv.textContent = "";
+        const arrowDiv = this.flankerArrows;
+        if (arrowDiv) arrowDiv.textContent = "";
 
         this.gameData.flankerCurrentTrial++;
 
         this.gameData.flankerFeedbackTimeout = setTimeout(() => {
-            feedbackDiv.textContent = "";
+            if (feedbackDiv) feedbackDiv.textContent = "";
             this.startFlankerTrial();
         }, 1000);
     }
@@ -2419,9 +2075,11 @@ class GameManager {
         });
 
         this.appContainer.style.backgroundColor = '';
-        const scoreDisplay = document.getElementById('round-score');
-        scoreDisplay.innerHTML = `Avg: ${avgTime} ms<br><span style="font-size: 2rem; color: #cc3333">${this.gameData.flankerErrors} Errors</span>`;
-        scoreDisplay.style.color = "var(--text-color)";
+        const scoreDisplay = this.roundScore;
+        if (scoreDisplay) {
+            scoreDisplay.innerHTML = `Avg: ${avgTime} ms<br><span style="font-size: 2rem; color: #cc3333">${this.gameData.flankerErrors} Errors</span>`;
+            scoreDisplay.style.color = "var(--text-color)";
+        }
 
         this.proceedAfterTest();
     }
@@ -2437,9 +2095,11 @@ class GameManager {
 
             this.appContainer.style.backgroundColor = '';
             document.body.style.backgroundColor = '';
-            const prompt = document.getElementById('minigame-prompt');
-            prompt.textContent = "Too early!";
-            prompt.style.color = "#cc3333";
+            const prompt = this.minigamePrompt;
+            if (prompt) {
+                prompt.textContent = "Too early!";
+                prompt.style.color = "#cc3333";
+            }
             this.gameData.trialTimes.push(400); // Early penalty
             this.gameData.trialScores.push("Early");
             this.gameData.currentTrialCount++;
@@ -2459,9 +2119,11 @@ class GameManager {
 
             this.appContainer.style.backgroundColor = '';
             document.body.style.backgroundColor = '';
-            const prompt = document.getElementById('minigame-prompt');
-            prompt.textContent = `${reactionTime} ms`;
-            prompt.style.color = "var(--accent-color)";
+            const prompt = this.minigamePrompt;
+            if (prompt) {
+                prompt.textContent = `${reactionTime} ms`;
+                prompt.style.color = "var(--accent-color)";
+            }
 
             if (this.gameData.currentTrialCount >= 5) {
                 setTimeout(() => this.endReactionTask(), 1000);
@@ -2488,13 +2150,15 @@ class GameManager {
         }
 
         this.appContainer.style.backgroundColor = '';
-        const scoreDisplay = document.getElementById('round-score');
+        const scoreDisplay = this.roundScore;
 
-        let earlyStr = earlyCount > 0 ? `<br><span style="font-size: 1.5rem;">Early: ${earlyCount}/5 times</span>` : "";
-        scoreDisplay.innerHTML = `Average: <br><span style="color: var(--accent-color); font-size: 3rem;">${avgStr}</span>${earlyStr}`;
+        if (scoreDisplay) {
+            let earlyStr = earlyCount > 0 ? `<br><span style="font-size: 1.5rem;">Early: ${earlyCount}/5 times</span>` : "";
+            scoreDisplay.innerHTML = `Average: <br><span style="color: var(--accent-color); font-size: 3rem;">${avgStr}</span>${earlyStr}`;
 
-        if (avgStr.includes("Fail")) scoreDisplay.style.color = "#cc3333";
-        else scoreDisplay.style.color = "var(--text-color)";
+            if (avgStr.includes("Fail")) scoreDisplay.style.color = "#cc3333";
+            else scoreDisplay.style.color = "var(--text-color)";
+        }
 
         this.proceedAfterTest();
     }
@@ -2511,7 +2175,9 @@ class GameManager {
             if (isRoundEnd && !isLastTest) {
                 const currentRound = completedTests / roundSize;
                 const totalRounds = Math.ceil(this.testSequence.length / roundSize);
-                document.getElementById('round-complete-text').innerHTML = `You have finished all tests in <strong>Round ${currentRound} of ${totalRounds}</strong>.<br><br>Take a short break if needed, then click below to start the next round.`;
+                if (this.roundCompleteText) {
+                    this.roundCompleteText.innerHTML = `You have finished all tests in <strong>Round ${currentRound} of ${totalRounds}</strong>.<br><br>Take a short break if needed, then click below to start the next round.`;
+                }
                 this.showScreen('round-complete-screen');
             } else if (isLastTest) {
                 this.showFinalResults();
@@ -2524,7 +2190,7 @@ class GameManager {
 
     showFinalResults() {
         this.showScreen('final-screen');
-        const summaryDiv = document.getElementById('final-summary');
+        const summaryDiv = this.finalSummary;
         let html = '<h2 style="text-align: center; margin-bottom: 2rem;">Final Scores</h2><ul style="list-style: none; padding: 0;">';
 
         for (const [key, value] of Object.entries(this.state.scores)) {
@@ -2591,11 +2257,12 @@ class GameManager {
             html += renderResultsBreakdown('Reverse Numbers Breakdown', this.state.breakdowns['reverseSequentialNumberMemory']);
             html += renderResultsBreakdown('Mental Math — Wrong Answers', this.state.breakdowns['mentalMath']);
             html += renderResultsBreakdown('Story Math — Wrong Answers', this.state.breakdowns['storyMath']);
+            html += renderResultsBreakdown('Clock Reading Breakdown', this.state.breakdowns['clockReading']);
         }
 
-        summaryDiv.innerHTML = html;
+        if (summaryDiv) summaryDiv.innerHTML = html;
 
-        document.getElementById('progress-container').style.display = 'none';
+        if (this.progressContainer) this.progressContainer.style.display = 'none';
 
         // Save to History (Only Full Assessments)
         if (!this.gameData.isIndividualTest) {
@@ -2605,28 +2272,31 @@ class GameManager {
 
     // --- State Persistence & UI Extras ---
     updateProgressBar() {
-        const progressBar = document.getElementById('progress-bar');
-        const progressInfo = document.getElementById('progress-info');
+        const progressBar = this.progressBar;
+        const progressInfo = this.progressInfo;
         const totalTests = this.testSequence.length;
-        const currentTest = this.currentTestIndex + 1;
 
-        const pct = (this.currentTestIndex / totalTests) * 100;
-        progressBar.style.width = `${pct}%`;
+        if (progressBar) {
+            const pct = (this.currentTestIndex / totalTests) * 100;
+            progressBar.style.width = `${pct}%`;
+        }
 
-        if (!this.gameData.isIndividualTest) {
-            const roundSize = this.testSequence.length / this.gameData.numRounds;
-            const currentRound = Math.floor(this.currentTestIndex / roundSize) + 1;
-            const totalRounds = Math.ceil(totalTests / roundSize);
-            const testInRound = (this.currentTestIndex % roundSize) + 1;
+        if (progressInfo) {
+            if (!this.gameData.isIndividualTest) {
+                const roundSize = this.testSequence.length / this.gameData.numRounds;
+                const currentRound = Math.floor(this.currentTestIndex / roundSize) + 1;
+                const totalRounds = Math.ceil(totalTests / roundSize);
+                const testInRound = (this.currentTestIndex % roundSize) + 1;
 
-            progressInfo.textContent = `Round ${currentRound} of ${totalRounds} • Test ${testInRound} of ${roundSize}`;
-        } else {
-            progressInfo.textContent = "";
+                progressInfo.textContent = `Round ${currentRound} of ${totalRounds} • Test ${testInRound} of ${roundSize}`;
+            } else {
+                progressInfo.textContent = "";
+            }
         }
     }
 
     saveSettings() {
-        localStorage.setItem('cognitiveTestSettings', JSON.stringify(this.settings));
+        this.setStorageItem('cognitiveTestSettings', JSON.stringify(this.settings));
     }
 
     applyTheme(isDark) {
@@ -2641,7 +2311,7 @@ class GameManager {
     // Single source of truth for computing a 0-100 metric score from raw test data.
     // Returns null for tests that don't contribute to the overall metric.
     computeScoreForTest(key, value) {
-        if (key === 'storyMemoryQuestions' || key === 'storyMemoryReading' || key === 'addressMemoryReading' || key === 'addressMemoryQuestions') return null;
+        if (key.startsWith('story') || key === 'storyMemoryQuestions' || key === 'storyMemoryReading' || key === 'addressMemoryReading' || key === 'addressMemoryQuestions') return null;
         if (!Array.isArray(value) || value.length === 0) return null;
 
         if (typeof value[0] === 'object' && value[0].avgReaction !== undefined) {
@@ -2706,7 +2376,7 @@ class GameManager {
     }
 
     saveToHistory() {
-        let history = JSON.parse(localStorage.getItem('cognitiveTestHistory')) || [];
+        let history = JSON.parse(this.getStorageItem('cognitiveTestHistory')) || [];
 
         // Calculate a crude 'overall' score metric for the quick-view list
         let aggregatePoints = 0;
@@ -2748,12 +2418,12 @@ class GameManager {
         // Keep max 50 records
         if (history.length > 50) history.pop();
 
-        localStorage.setItem('cognitiveTestHistory', JSON.stringify(history));
+        this.setStorageItem('cognitiveTestHistory', JSON.stringify(history));
     }
 
     renderHistory() {
-        const historyContainer = document.getElementById('history-container');
-        const history = JSON.parse(localStorage.getItem('cognitiveTestHistory')) || [];
+        const historyContainer = this.historyContainer || document.getElementById('history-container');
+        const history = JSON.parse(this.getStorageItem('cognitiveTestHistory')) || [];
 
         if (history.length === 0) {
             historyContainer.innerHTML = '<p style="text-align: center; opacity: 0.6; margin-top: 2rem;">No past results found. Complete a Full Assessment to generate history.</p>';
@@ -2781,11 +2451,11 @@ class GameManager {
     }
 
     showHistoryDetail(index) {
-        const history = JSON.parse(localStorage.getItem('cognitiveTestHistory')) || [];
+        const history = JSON.parse(this.getStorageItem('cognitiveTestHistory')) || [];
         const run = history[index];
         if (!run) return;
 
-        const detailContainer = document.getElementById('history-detail-container');
+        const detailContainer = this.historyDetailContainer || document.getElementById('history-detail-container');
         if (!run.rawScores) {
             detailContainer.innerHTML = '<p style="text-align: center; opacity: 0.6;">No detailed data available for this older run.</p>';
             this.showScreen('history-detail-screen');
@@ -2853,8 +2523,14 @@ class GameManager {
         html += '</tr></thead><tbody>';
 
         // Define display order: scored tests first, then question rounds
-        const scoredTests = ['audioReaction', 'visualReaction', 'inhibitoryControl', 'flankerArrow', 'visualSpatialMemory', 'simultaneousSpatialMemory', 'sequentialNumberMemory', 'reverseSequentialNumberMemory', 'nBackTask', 'chimpTest', 'mentalMath', 'storyMath'];
-        const questionTests = ['storyMemoryQuestions', 'addressMemoryQuestions'];
+        const scoredTests = ['audioReaction', 'visualReaction', 'inhibitoryControl', 'flankerArrow', 'visualSpatialMemory', 'simultaneousSpatialMemory', 'sequentialNumberMemory', 'reverseSequentialNumberMemory', 'nBackTask', 'chimpTest', 'mentalMath', 'storyMath', 'clockReading'];
+        const questionTests = [
+            'storyMemoryQuestions', 
+            'story1Recall1', 'story1Recall2', 'story1Recall3',
+            'story2Recall1', 'story2Recall2',
+            'story3Recall1',
+            'addressMemoryQuestions'
+        ];
         const allTests = [...scoredTests, ...questionTests];
 
         for (const key of allTests) {
@@ -2927,6 +2603,7 @@ class GameManager {
             html += renderHistoryBreakdown('Reverse Numbers Breakdown', run.rawBreakdowns['reverseSequentialNumberMemory']);
             html += renderHistoryBreakdown('Mental Math — Wrong Answers', run.rawBreakdowns['mentalMath']);
             html += renderHistoryBreakdown('Story Math — Wrong Answers', run.rawBreakdowns['storyMath']);
+            html += renderHistoryBreakdown('Clock Reading Breakdown', run.rawBreakdowns['clockReading']);
         }
 
         detailContainer.innerHTML = html;
@@ -2934,7 +2611,7 @@ class GameManager {
     }
 
     renameHistory(index) {
-        let history = JSON.parse(localStorage.getItem('cognitiveTestHistory')) || [];
+        let history = JSON.parse(this.getStorageItem('cognitiveTestHistory')) || [];
         if (!history[index]) return;
 
         const currentName = history[index].name || history[index].date;
@@ -2948,7 +2625,7 @@ class GameManager {
             onConfirm: (value) => {
                 if (value && value.trim() !== '') {
                     history[index].name = value.trim();
-                    localStorage.setItem('cognitiveTestHistory', JSON.stringify(history));
+                    this.setStorageItem('cognitiveTestHistory', JSON.stringify(history));
                     this.renderHistory();
                     this.showHistoryDetail(index);
                 }
@@ -2957,7 +2634,7 @@ class GameManager {
     }
 
     deleteHistory(index) {
-        let history = JSON.parse(localStorage.getItem('cognitiveTestHistory')) || [];
+        let history = JSON.parse(this.getStorageItem('cognitiveTestHistory')) || [];
         if (!history[index]) return;
 
         this.showCustomModal({
@@ -2969,7 +2646,7 @@ class GameManager {
             dangerous: true,
             onConfirm: () => {
                 history.splice(index, 1);
-                localStorage.setItem('cognitiveTestHistory', JSON.stringify(history));
+                this.setStorageItem('cognitiveTestHistory', JSON.stringify(history));
                 this.renderHistory();
                 this.showScreen('history-screen');
             }
@@ -3055,6 +2732,342 @@ class GameManager {
                 if (e.key === 'Escape') overlay.remove();
             });
         }
+    }
+
+    // --- Clock Reading Minigame Methods ---
+    startClockReading() {
+        // Generate round configurations (5 with indicators, 5 without)
+        const roundsConfig = [true, true, true, true, true, false, false, false, false, false];
+        // Shuffle configurations
+        for (let i = roundsConfig.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [roundsConfig[i], roundsConfig[j]] = [roundsConfig[j], roundsConfig[i]];
+        }
+
+        this.gameData.clockRConfig = roundsConfig;
+        this.gameData.clockCurrentRound = 0;
+        this.gameData.clockScore = 0;
+        this.gameData.clockWrongAnswers = [];
+
+        this.nextClockReadingQuestion();
+    }
+
+    nextClockReadingQuestion() {
+        this.gameData.clockCurrentRound++;
+        
+        // Clear any active timer intervals
+        clearInterval(this.gameData.clockTimerInterval);
+
+        // Generate target time: hour (1-12) and minute (0-55 in multiples of 5)
+        const hour = Math.floor(Math.random() * 12) + 1;
+        const minute = Math.floor(Math.random() * 12) * 5;
+        const correctStr = `${hour}:${String(minute).padStart(2, '0')}`;
+        this.gameData.clockCorrectTime = correctStr;
+
+        // Generate choices
+        const choicesSet = new Set();
+        choicesSet.add(correctStr);
+
+        // Choice 2: Hand-swapped distractor
+        // minute hand (value / 5) maps to hour (1-12)
+        let swappedHour = Math.floor(minute / 5);
+        if (swappedHour === 0) swappedHour = 12;
+        // hour hand maps to minute (hour * 5)
+        let swappedMin = (hour % 12) * 5;
+        const swappedStr = `${swappedHour}:${String(swappedMin).padStart(2, '0')}`;
+        if (swappedStr !== correctStr) {
+            choicesSet.add(swappedStr);
+        }
+
+        // Choices 3 & 4: Distractors close to the correct time (±1 hour, ±15 mins)
+        let attempts = 0;
+        const hrOffsets = [-1, 0, 1];
+        const minOffsets = [-15, -10, -5, 5, 10, 15];
+
+        while (choicesSet.size < 4 && attempts < 100) {
+            attempts++;
+            const dh = hrOffsets[Math.floor(Math.random() * hrOffsets.length)];
+            const dm = minOffsets[Math.floor(Math.random() * minOffsets.length)];
+            
+            if (dh === 0 && dm === 0) continue;
+
+            const h = (hour + dh + 12 - 1) % 12 + 1;
+            const m = (minute + dm + 60) % 60;
+            choicesSet.add(`${h}:${String(m).padStart(2, '0')}`);
+        }
+
+        // Fallback
+        while (choicesSet.size < 4) {
+            const h = Math.floor(Math.random() * 12) + 1;
+            const m = Math.floor(Math.random() * 12) * 5;
+            choicesSet.add(`${h}:${String(m).padStart(2, '0')}`);
+        }
+
+        // Convert and shuffle choices (User: "dont forget to shuffle these")
+        const choices = Array.from(choicesSet);
+        for (let i = choices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [choices[i], choices[j]] = [choices[j], choices[i]];
+        }
+
+        // Update round info and retrieve indicators config
+        if (this.clockProgressInfo) {
+            this.clockProgressInfo.textContent = `Round ${this.gameData.clockCurrentRound} of 10`;
+        }
+        const withIndicators = this.gameData.clockRConfig[this.gameData.clockCurrentRound - 1];
+
+        // Draw the clock face on canvas
+        this.drawAnalogClock(hour, minute, withIndicators);
+
+        // Render options buttons (including desktop shortcut hints)
+        const container = this.clockOptionsContainer;
+        if (container) {
+            container.innerHTML = choices.map((c, idx) => `
+                <button class="clock-option-btn" onclick="window.gameManager.handleClockAnswer('${c}', this)">
+                    <span style="font-size: 0.85em; opacity: 0.5; margin-right: 8px;">[${idx + 1}]</span>${c}
+                </button>
+            `).join('');
+        }
+
+        // Start round timer (10s max)
+        this.gameData.clockRoundStartTime = performance.now();
+        const timerText = this.clockTimerText;
+        const timerBar = this.clockTimerBar;
+        timerText.textContent = '10.0s';
+        timerText.style.color = 'var(--accent-color)';
+        timerBar.style.width = '100%';
+        timerBar.style.backgroundColor = 'var(--accent-color)';
+
+        this.gameData.clockTimerInterval = setInterval(() => {
+            const elapsed = (performance.now() - this.gameData.clockRoundStartTime) / 1000;
+            const remaining = Math.max(0, 10 - elapsed);
+            timerText.textContent = `${remaining.toFixed(1)}s`;
+            timerBar.style.width = `${(remaining / 10) * 100}%`;
+
+            if (remaining < 3) {
+                timerBar.style.backgroundColor = '#cc3333';
+                timerText.style.color = '#cc3333';
+            } else {
+                timerBar.style.backgroundColor = 'var(--accent-color)';
+                timerText.style.color = 'var(--accent-color)';
+            }
+
+            if (remaining <= 0) {
+                clearInterval(this.gameData.clockTimerInterval);
+                this.handleClockAnswer(null, null); // timeout
+            }
+        }, 50);
+    }
+
+    drawAnalogClock(hour, minute, withIndicators) {
+        const canvas = this.clockCanvas || document.getElementById('clock-canvas');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        const r = cx - 15;
+
+        // Query colors from the body style to support light/dark modes
+        const styles = getComputedStyle(document.body);
+        const textColor = styles.getPropertyValue('--text-color').trim() || '#e0e0e0';
+        const accentColor = styles.getPropertyValue('--accent-color').trim() || '#4a90e2';
+        const isDarkMode = !document.body.classList.contains('light-mode');
+        const faceBgColor = isDarkMode ? '#141414' : '#f5f5f5';
+        const rimColor = isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)';
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Clock Rim Background
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+        ctx.fillStyle = faceBgColor;
+        ctx.fill();
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = rimColor;
+        ctx.stroke();
+
+        // Draw Indicator marks (Lines instead of numbers)
+        if (withIndicators) {
+            ctx.strokeStyle = textColor;
+            ctx.lineCap = 'round';
+            for (let i = 0; i < 12; i++) {
+                const angle = i * Math.PI / 6;
+                const isMajor = (i % 3 === 0); // 12, 3, 6, 9
+                const tickLength = isMajor ? 14 : 8;
+                const tickWidth = isMajor ? 4 : 2;
+
+                ctx.lineWidth = tickWidth;
+                const x1 = cx + (r - tickLength) * Math.sin(angle);
+                const y1 = cy - (r - tickLength) * Math.cos(angle);
+                const x2 = cx + r * Math.sin(angle);
+                const y2 = cy - r * Math.cos(angle);
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+        }
+
+        // Draw Hour Hand
+        // Hour moves incrementally as minutes progress
+        const hrAngle = (hour % 12) * Math.PI / 6 + (minute / 60) * Math.PI / 6;
+        ctx.strokeStyle = textColor;
+        ctx.lineWidth = 7;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + (r * 0.5) * Math.sin(hrAngle), cy - (r * 0.5) * Math.cos(hrAngle));
+        ctx.stroke();
+
+        // Draw Minute Hand
+        const minAngle = minute * Math.PI / 30;
+        ctx.strokeStyle = accentColor;
+        ctx.lineWidth = 4.5;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + (r * 0.78) * Math.sin(minAngle), cy - (r * 0.78) * Math.cos(minAngle));
+        ctx.stroke();
+
+        // Draw Center Pivot Cap
+        ctx.beginPath();
+        ctx.arc(cx, cy, 8, 0, 2 * Math.PI);
+        ctx.fillStyle = textColor;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, 3.5, 0, 2 * Math.PI);
+        ctx.fillStyle = faceBgColor;
+        ctx.fill();
+    }
+
+    handleClockAnswer(selectedTime, buttonEl) {
+        clearInterval(this.gameData.clockTimerInterval);
+
+        // Lock answer input buttons
+        const buttons = document.querySelectorAll('.clock-option-btn');
+        buttons.forEach(btn => btn.disabled = true);
+
+        const elapsedMs = performance.now() - this.gameData.clockRoundStartTime;
+        let points = 0;
+        const isCorrect = (selectedTime === this.gameData.clockCorrectTime);
+
+        // Highlight correct and selected answers
+        buttons.forEach(btn => {
+            const timeVal = btn.textContent.trim().split(']').pop().trim();
+            if (timeVal === this.gameData.clockCorrectTime) {
+                btn.classList.add('correct-choice');
+            }
+        });
+
+        if (selectedTime === null) {
+            // Timeout
+            this.playBeep(220, 0.3);
+            this.gameData.clockWrongAnswers.push({
+                round: this.gameData.clockCurrentRound,
+                indicators: this.gameData.clockRConfig[this.gameData.clockCurrentRound - 1] ? 'Yes' : 'No',
+                correct: this.gameData.clockCorrectTime,
+                answered: 'Timeout',
+                time: '10.00s',
+                points: 0,
+                correctStatus: false
+            });
+        } else {
+            if (isCorrect) {
+                // Score normalized to human reaction time (2s is max score, and it decreases from there)
+                if (elapsedMs <= 2000) {
+                    points = 100;
+                } else {
+                    points = Math.max(10, Math.round(((10000 - elapsedMs) / 8000) * 90) + 10);
+                }
+                this.gameData.clockScore += points;
+                this.playBeep(880, 0.2);
+            } else {
+                if (buttonEl) buttonEl.classList.add('wrong-choice');
+                this.playBeep(220, 0.3);
+            }
+
+            this.gameData.clockWrongAnswers.push({
+                round: this.gameData.clockCurrentRound,
+                indicators: this.gameData.clockRConfig[this.gameData.clockCurrentRound - 1] ? 'Yes' : 'No',
+                correct: this.gameData.clockCorrectTime,
+                answered: selectedTime,
+                time: `${(elapsedMs / 1000).toFixed(2)}s`,
+                points: points,
+                correctStatus: isCorrect
+            });
+        }
+
+        // Advance round after 1.2s
+        setTimeout(() => {
+            if (this.gameData.clockCurrentRound < 10) {
+                this.nextClockReadingQuestion();
+            } else {
+                this.endClockReading();
+            }
+        }, 1200);
+    }
+
+    endClockReading() {
+        const totalPoints = Math.round(this.gameData.clockScore / 10);
+        const correctRounds = this.gameData.clockWrongAnswers.filter(r => r.correctStatus).length;
+
+        if (!this.state.scores['clockReading']) this.state.scores['clockReading'] = [];
+        this.state.scores['clockReading'].push(`${totalPoints} Points`);
+
+        const breakdownHTML = this.generateClockBreakdownHTML(totalPoints, correctRounds);
+
+        if (!this.state.breakdowns['clockReading']) this.state.breakdowns['clockReading'] = [];
+        this.state.breakdowns['clockReading'].push({
+            summary: `${correctRounds}/10 Correct • Avg Score: ${totalPoints} Pts`,
+            wrongAnswersHTML: breakdownHTML
+        });
+
+        const scoreDisplay = this.roundScore || document.getElementById('round-score');
+        if (scoreDisplay) {
+            scoreDisplay.innerHTML = breakdownHTML;
+            scoreDisplay.style.color = 'var(--text-color)';
+        }
+
+        this.proceedAfterTest();
+    }
+
+    generateClockBreakdownHTML(avgPoints, correctRounds) {
+        let html = `<div style="text-align: center; margin-bottom: 1.5rem;">`;
+        html += `Average Score: <span class="score-highlight" style="font-size: 3rem; text-shadow: 0 0 15px rgba(74,144,226,0.4);">${avgPoints}</span> Points`;
+        html += `<br><span style="font-size: 1.2rem; opacity: 0.8;">Accuracy: ${correctRounds}/10 Correct</span></div>`;
+
+        html += `<div style="overflow-x: auto; width: 100%; max-width: 650px; margin: 0 auto; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--border-color);">`;
+        html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: center;">`;
+        html += `<thead><tr style="border-bottom: 2px solid var(--border-color); background: rgba(255,255,255,0.05); font-weight: bold; color: #a0a0a0;">`;
+        html += `<th style="padding: 10px; border: 1px solid var(--border-color);">Round</th>`;
+        html += `<th style="padding: 10px; border: 1px solid var(--border-color);">Indicators</th>`;
+        html += `<th style="padding: 10px; border: 1px solid var(--border-color);">Correct Time</th>`;
+        html += `<th style="padding: 10px; border: 1px solid var(--border-color);">Your Answer</th>`;
+        html += `<th style="padding: 10px; border: 1px solid var(--border-color);">Speed</th>`;
+        html += `<th style="padding: 10px; border: 1px solid var(--border-color);">Points</th>`;
+        html += `</tr></thead><tbody>`;
+
+        this.gameData.clockWrongAnswers.forEach(r => {
+            const symbol = r.correctStatus ? '✅' : '❌';
+            const answeredText = r.answered === 'Timeout' ? 'Timeout' : r.answered;
+            const answeredColor = r.correctStatus ? '#4CAF50' : '#F44336';
+            const rowBg = r.correctStatus ? 'transparent' : 'rgba(244, 67, 54, 0.03)';
+
+            html += `<tr style="border-bottom: 1px solid var(--border-color); background: ${rowBg};">`;
+            html += `<td style="padding: 10px; border: 1px solid var(--border-color);">${r.round}</td>`;
+            html += `<td style="padding: 10px; border: 1px solid var(--border-color); opacity: 0.8;">${r.indicators}</td>`;
+            html += `<td style="padding: 10px; border: 1px solid var(--border-color); font-weight: bold; color: var(--accent-color);">${r.correct}</td>`;
+            html += `<td style="padding: 10px; border: 1px solid var(--border-color); font-weight: bold; color: ${answeredColor};">${symbol} ${answeredText}</td>`;
+            html += `<td style="padding: 10px; border: 1px solid var(--border-color); opacity: 0.8;">${r.time}</td>`;
+            html += `<td style="padding: 10px; border: 1px solid var(--border-color); font-weight: bold; color: ${r.points > 0 ? '#4CAF50' : 'inherit'};">${r.points}</td>`;
+            html += `</tr>`;
+        });
+
+        html += `</tbody></table></div>`;
+        return html;
     }
 }
 

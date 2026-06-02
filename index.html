@@ -68,6 +68,7 @@
                 <button class="test-btn" data-test="chimpTest">Chimp Test</button>
                 <button class="test-btn" data-test="mentalMath">Mental Math</button>
                 <button class="test-btn" data-test="storyMath">Story Math</button>
+                <button class="test-btn" data-test="clockReading">Clock Reading</button>
             </div>
             <button onclick="window.gameManager.showScreen('menu-screen')" style="margin-top: 2rem;">Back to
                 Menu</button>
@@ -164,6 +165,23 @@
             <div id="math-progress" style="margin-top: 2rem; color: var(--text-color); opacity: 0.7;"></div>
         </div>
 
+        <div id="clock-reading-screen" class="screen">
+            <h2 id="clock-prompt" style="font-size: 2rem; margin-bottom: 1.5rem;">What time is shown on the clock?</h2>
+            <div id="clock-progress-info" style="font-size: 1.1rem; opacity: 0.7; margin-bottom: 1rem; color: var(--accent-color); font-weight: bold; letter-spacing: 1px;">Round 1 of 10</div>
+            
+            <div class="clock-container" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 2rem; border-radius: 16px; display: inline-flex; flex-direction: column; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem;">
+                <canvas id="clock-canvas" width="280" height="280" style="display: block; max-width: 100%; border-radius: 50%; box-shadow: 0 4px 20px rgba(0,0,0,0.4); background: #111;"></canvas>
+                <div class="clock-timer-container" style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; position: relative;">
+                    <div id="clock-timer-bar" style="width: 100%; height: 100%; background: var(--accent-color); transition: width 0.1s linear;"></div>
+                </div>
+                <div id="clock-timer-text" style="font-size: 1.5rem; font-weight: bold; color: var(--accent-color);">10.0s</div>
+            </div>
+
+            <div id="clock-options-container" class="options-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; width: 100%; max-width: 500px; margin: 0 auto;">
+                <!-- Multiple choice buttons will be injected here by JS -->
+            </div>
+        </div>
+
         <div id="nback-screen" class="screen">
             <h2>Press Spacebar if letter matches the one from 2 steps ago.</h2>
             <div id="nback-letter-display" class="nback-letter"></div>
@@ -229,6 +247,7 @@
             <button id="close-settings-btn" style="margin-top: 2rem; width: 100%;">Close</button>
         </div>
     </div>
+    <script>document.write('<scr' + 'ipt src="data.js?v=' + Date.now() + '"></scr' + 'ipt>');</script>
     <script>document.write('<scr' + 'ipt src="app.js?v=' + Date.now() + '"></scr' + 'ipt>');</script>
     <script>
         if ('serviceWorker' in navigator) {
