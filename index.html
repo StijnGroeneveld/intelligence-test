@@ -5,9 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cognitive Intelligence Test</title>
-    <script>
-        document.write('<link rel="stylesheet" href="style.css?v=' + Date.now() + '">');
-    </script>
+    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <!-- PWA -->
@@ -226,8 +224,8 @@
     </div>
 
 
-    <script>document.write('<scr' + 'ipt src="data.js?v=' + Date.now() + '"></scr' + 'ipt>');</script>
-    <script>document.write('<scr' + 'ipt src="app.js?v=' + Date.now() + '"></scr' + 'ipt>');</script>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');

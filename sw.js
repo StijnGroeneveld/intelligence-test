@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cognitive-test-v5';
+const CACHE_NAME = 'cognitive-test-v6';
 const ASSETS = [
     './',
     './index.html',
@@ -29,9 +29,23 @@ self.addEventListener('activate', event => {
     self.clients.claim();
 });
 
-// Fetch: serve from cache first, fall back to network
+// Fetch: Network-first for fresh updates, falling back to cache when offline
 self.addEventListener('fetch', event => {
+    if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
+        return;
+    }
+
     event.respondWith(
-        caches.match(event.request).then(cached => cached || fetch(event.request))
+        fetch(event.request)
+            .then(networkResponse => {
+                if (networkResponse && networkResponse.status === 200) {
+                    const responseClone = networkResponse.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseClone);
+                    });
+                }
+                return networkResponse;
+            })
+            .catch(() => caches.match(event.request))
     );
 });
