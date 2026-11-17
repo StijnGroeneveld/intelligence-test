@@ -7,6 +7,11 @@
     <title>Cognitive Intelligence Test</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Critical inline styles: prevent flash of unstyled content if external CSS is delayed -->
+    <style>
+        body { background: #0d0d0d; color: #e0e0e0; font-family: 'Inter', sans-serif; margin: 0; }
+        .screen { display: none; }
+    </style>
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
@@ -227,8 +232,25 @@
     <script src="data.js"></script>
     <script src="app.js"></script>
     <script>
+        // Force-refresh stale service workers: unregister old ones, then re-register
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                var needsRefresh = false;
+                registrations.forEach(function(reg) {
+                    // If the SW is from an old cache version, unregister it
+                    reg.unregister().then(function(success) {
+                        if (success) needsRefresh = true;
+                    });
+                });
+                // Clear all caches then re-register the new SW
+                if (typeof caches !== 'undefined') {
+                    caches.keys().then(function(names) {
+                        names.forEach(function(name) { caches.delete(name); });
+                    });
+                }
+                // Register the fresh service worker
+                navigator.serviceWorker.register('sw.js');
+            });
         }
     </script>
 </body>

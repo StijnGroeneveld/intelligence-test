@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cognitive-test-v6';
+const CACHE_NAME = 'cognitive-test-v7';
 const ASSETS = [
     './',
     './index.html',
